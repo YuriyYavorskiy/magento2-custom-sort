@@ -40,11 +40,10 @@ class ToolbarPlugin
             return $orders;
         }
 
-        // Sort our config by the sort_order key
         usort($customSortConfig, static fn($a, $b) => ($a['sort_order'] ?? 0) <=> ($b['sort_order'] ?? 0));
 
         $sortedOrders = [];
-        // Add configured orders first, in the specified sequence
+
         foreach ($customSortConfig as $config) {
             $attributeCode = $config['attribute_code'] ?? null;
             if ($attributeCode && isset($orders[$attributeCode])) {
@@ -52,7 +51,6 @@ class ToolbarPlugin
             }
         }
 
-        // Add any remaining default/other orders that were not in our config
         foreach ($orders as $code => $label) {
             if (!isset($sortedOrders[$code])) {
                 $sortedOrders[$code] = $label;
