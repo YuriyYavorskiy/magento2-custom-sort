@@ -1,0 +1,76 @@
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+
+.product-qa-container {
+    margin-top: 20px;
+}
+
+.product-qa-container .questions-list-section,
+.product-qa-container .question-form-section {
+    margin-bottom: 30px;
+}
+
+.product-qa-container .question-item {
+    border-bottom: 1px solid #ccc;
+    padding: 15px 0;
+}
+
+.product-qa-container .question-item:last-child {
+    border-bottom: none;
+}
+
+.product-qa-container .question-header {
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.product-qa-container .question-date {
+    color: #666;
+    margin-left: 10px;
+    font-size: 0.9em;
+}
+
+.product-qa-container .question-body {
+    margin-bottom: 10px;
+}
+
+.product-qa-container .answers-list {
+    margin-left: 20px;
+    padding-left: 15px;
+    border-left: 3px solid #eee;
+}
+
+.product-qa-container .answer-item {
+    margin-bottom: 10px;
+}
+
+.product-qa-container .answer-footer {
+    color: #888;
+    font-size: 0.85em;
+    margin-top: 5px;
+}
+
+.product-qa-container .no-answer-yet {
+    margin-left: 20px;
+    color: #888;
+}
+
+.product-qa-container .question-form {
+    max-width: 600px;
+}
+
+.product-qa-container .message {
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.product-qa-container .message.success {
+    background-color: #e5efe5;
+    color: #006400;
+}
+
+.product-qa-container .message.error {
+    background-color: #fae5e5;
+    color: #e02b27;
+}

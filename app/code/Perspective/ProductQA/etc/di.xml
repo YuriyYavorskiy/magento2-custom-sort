@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- Service Contracts Preferences -->
+    <preference for="Perspective\ProductQA\Api\Data\QuestionInterface" type="Perspective\ProductQA\Model\Question"/>
+    <preference for="Perspective\ProductQA\Api\Data\AnswerInterface" type="Perspective\ProductQA\Model\Answer"/>
+    <preference for="Perspective\ProductQA\Api\QuestionRepositoryInterface" type="Perspective\ProductQA\Model\QuestionRepository"/>
+    <preference for="Perspective\ProductQA\Api\AnswerRepositoryInterface" type="Perspective\ProductQA\Model\AnswerRepository"/>
+    <preference for="Perspective\ProductQA\Api\Data\QuestionSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+
+    <!-- Admin UI Grid Collection -->
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="perspective_productqa_question_listing_data_source" xsi:type="string">Perspective\ProductQA\Model\ResourceModel\Question\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Perspective\ProductQA\Model\ResourceModel\Question\Grid\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">perspective_productqa_question</argument>
+            <argument name="resourceModel" xsi:type="string">Perspective\ProductQA\Model\ResourceModel\Question</argument>
+        </arguments>
+    </virtualType>
+</config>

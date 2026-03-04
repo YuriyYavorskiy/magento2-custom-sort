@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Perspective_ProductQA::productqa" title="Product Q&amp;A" module="Perspective_ProductQA" sortOrder="80" parent="Magento_Catalog::catalog" action="productqa/question/index" resource="Perspective_ProductQA::question_view"/>
+    </menu>
+</config>

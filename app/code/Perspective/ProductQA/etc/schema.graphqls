@@ -1,0 +1,41 @@
+type Query {
+    productQuestions(
+        productId: Int! @doc(description: "Id of the product to fetch questions for.")
+    ): ProductQuestionsOutput! @resolver(class: "\\Perspective\\ProductQA\\Model\\Resolver\\ProductQuestions") @doc(description: "Returns an array of approved questions and their answers for a product.")
+}
+
+type Mutation {
+    createProductQuestion(
+        input: CreateProductQuestionInput! @doc(description: "Input to create a new product question.")
+    ): CreateProductQuestionOutput! @resolver(class: "\\Perspective\\ProductQA\\Model\\Resolver\\CreateProductQuestion") @doc(description: "Create a new product question.")
+}
+
+input CreateProductQuestionInput {
+    product_id: Int!
+    author_name: String!
+    author_email: String!
+    question_text: String!
+}
+
+type CreateProductQuestionOutput {
+    success: Boolean! @doc(description: "Indicates whether the question was created successfully.")
+    message: String! @doc(description: "Information about the operation result.")
+}
+
+type ProductQuestionsOutput {
+    items: [ProductQuestion!]! @doc(description: "An array of product questions.")
+}
+
+type ProductQuestion {
+    question_id: Int! @doc(description: "The ID of the question.")
+    author_name: String! @doc(description: "The name of the customer who asked the question.")
+    question_text: String! @doc(description: "The question text.")
+    created_at: String! @doc(description: "The date the question was created.")
+    answers: [ProductAnswer!]! @doc(description: "Answers provided for the question.")
+}
+
+type ProductAnswer {
+    answer_id: Int! @doc(description: "The ID of the answer.")
+    answer_text: String! @doc(description: "The answer text.")
+    created_at: String! @doc(description: "The date the answer was created.")
+}

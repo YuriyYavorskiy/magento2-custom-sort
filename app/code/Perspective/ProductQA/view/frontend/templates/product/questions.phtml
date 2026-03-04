@@ -1,0 +1,28 @@
+<?php
+/**
+ * Copyright © Perspective. All rights reserved.
+ *
+ * @var \Magento\Framework\View\Element\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+?>
+<div id="product-questions-wrapper" data-bind="scope: 'productQuestions'">
+    <!-- ko template: getTemplate() --><!-- /ko -->
+</div>
+
+<script type="text/x-magento-init">
+    {
+        "#product-questions-wrapper": {
+            "Magento_Ui/js/core/app": {
+                "components": {
+                    "productQuestions": {
+                        "component": "Perspective_ProductQA/js/product-questions",
+                        "productId": <?= (int)$block->getRequest()->getParam('id') ?>,
+                        "fetchUrl": "<?= $escaper->escapeUrl($block->getUrl('productqa/ajax/questions')) ?>",
+                        "submitUrl": "<?= $escaper->escapeUrl($block->getUrl('productqa/ajax/submit')) ?>"
+                    }
+                }
+            }
+        }
+    }
+</script>

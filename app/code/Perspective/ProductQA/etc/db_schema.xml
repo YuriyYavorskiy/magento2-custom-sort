@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="perspective_productqa_question" resource="default" engine="innodb" comment="Product QA Questions">
+        <column xsi:type="int" name="question_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Question ID"/>
+        <column xsi:type="int" name="product_id" padding="10" unsigned="true" nullable="false" identity="false" comment="Product ID"/>
+        <column xsi:type="int" name="customer_id" padding="10" unsigned="true" nullable="true" identity="false" comment="Customer ID"/>
+        <column xsi:type="varchar" name="author_name" nullable="false" length="255" comment="Author Name"/>
+        <column xsi:type="varchar" name="author_email" nullable="false" length="255" comment="Author Email"/>
+        <column xsi:type="text" name="question_text" nullable="false" comment="Question Text"/>
+        <column xsi:type="smallint" name="status" padding="6" unsigned="true" nullable="false" default="0" comment="Status (0=Pending, 1=Approved, 2=Rejected)"/>
+        <column xsi:type="smallint" name="store_id" padding="5" unsigned="true" nullable="false" default="0" comment="Store ID"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Updated At"/>
+        
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="question_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="PERSPECTIVE_PRODQA_Q_PROD_ID_CAT_PROD_ENTT_ENTT_ID" table="perspective_productqa_question" column="product_id" referenceTable="catalog_product_entity" referenceColumn="entity_id" onDelete="CASCADE"/>
+        <constraint xsi:type="foreign" referenceId="PERSPECTIVE_PRODQA_Q_CSTR_ID_CSTR_ENTT_ENTT_ID" table="perspective_productqa_question" column="customer_id" referenceTable="customer_entity" referenceColumn="entity_id" onDelete="SET NULL"/>
+        <constraint xsi:type="foreign" referenceId="PERSPECTIVE_PRODQA_Q_STORE_ID_STORE_STORE_ID" table="perspective_productqa_question" column="store_id" referenceTable="store" referenceColumn="store_id" onDelete="CASCADE"/>
+        <index referenceId="PERSPECTIVE_PRODQA_Q_PROD_ID" indexType="btree">
+            <column name="product_id"/>
+        </index>
+        <index referenceId="PERSPECTIVE_PRODQA_Q_STATUS" indexType="btree">
+            <column name="status"/>
+        </index>
+        <index referenceId="PERSPECTIVE_PRODQA_Q_STORE_ID" indexType="btree">
+            <column name="store_id"/>
+        </index>
+    </table>
+
+    <table name="perspective_productqa_answer" resource="default" engine="innodb" comment="Product QA Answers">
+        <column xsi:type="int" name="answer_id" padding="10" unsigned="true" nullable="false" identity="true" comment="Answer ID"/>
+        <column xsi:type="int" name="question_id" padding="10" unsigned="true" nullable="false" identity="false" comment="Question ID"/>
+        <column xsi:type="int" name="admin_user_id" padding="10" unsigned="true" nullable="true" identity="false" comment="Admin User ID"/>
+        <column xsi:type="text" name="answer_text" nullable="false" comment="Answer Text"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP" comment="Updated At"/>
+        
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="answer_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="PERSPECTIVE_PRODQA_ANSW_Q_ID_PERSPECTIVE_PRODQA_Q_Q_ID" table="perspective_productqa_answer" column="question_id" referenceTable="perspective_productqa_question" referenceColumn="question_id" onDelete="CASCADE"/>
+        <constraint xsi:type="foreign" referenceId="PERSPECTIVE_PRODQA_A_ADMIN_USER_ID_ADMIN_USER_USER_ID" table="perspective_productqa_answer" column="admin_user_id" referenceTable="admin_user" referenceColumn="user_id" onDelete="SET NULL"/>
+    </table>
+</schema>

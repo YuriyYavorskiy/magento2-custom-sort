@@ -1,0 +1,93 @@
+<div class="product-qa-container" data-bind="blockLoader: isLoading">
+    <div class="questions-list-section">
+        <h3><!-- ko i18n: 'Customer Questions & Answers' --><!-- /ko --></h3>
+
+        <!-- ko if: !isLoading() && questions().length === 0 -->
+        <p class="no-questions"><!-- ko i18n: 'There are no questions yet. Be the first to ask!' --><!-- /ko --></p>
+        <!-- /ko -->
+
+        <!-- ko if: questions().length > 0 -->
+        <div class="questions-list" data-bind="foreach: questions">
+            <div class="question-item">
+                <div class="question-header">
+                    <strong class="question-author" data-bind="text: author_name"></strong>
+                    <span class="question-date" data-bind="text: $parent.formatDate(created_at)"></span>
+                </div>
+                <div class="question-body">
+                    <strong>Q: </strong><span data-bind="text: question_text"></span>
+                </div>
+
+                <!-- ko if: answers.length > 0 -->
+                <div class="answers-list" data-bind="foreach: answers">
+                    <div class="answer-item">
+                        <div class="answer-body">
+                            <strong>A: </strong><span data-bind="text: answer_text"></span>
+                        </div>
+                        <div class="answer-footer">
+                            <span class="answer-date" data-bind="text: $parents[1].formatDate(created_at)"></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- /ko -->
+                <!-- ko if: answers.length === 0 -->
+                <div class="no-answer-yet">
+                    <em><!-- ko i18n: 'Awaiting answer.' --><!-- /ko --></em>
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+        <!-- /ko -->
+    </div>
+
+    <div class="question-form-section">
+        <h3><!-- ko i18n: 'Ask a Question' --><!-- /ko --></h3>
+
+        <!-- ko if: submitSuccess -->
+        <div class="message success">
+            <div data-bind="text: submitMessage"></div>
+        </div>
+        <!-- /ko -->
+
+        <!-- ko if: submitError -->
+        <div class="message error">
+            <div data-bind="text: submitMessage"></div>
+        </div>
+        <!-- /ko -->
+
+        <form class="form question-form" id="product-question-form"
+            data-bind="submit: submitQuestion, mageInit: {'validation':{}}">
+            <fieldset class="fieldset">
+                <div class="field name required">
+                    <label class="label" for="qa-name"><span><!-- ko i18n: 'Name' --><!-- /ko --></span></label>
+                    <div class="control">
+                        <input type="text" name="author_name" id="qa-name" class="input-text"
+                            data-bind="value: newQuestionName" data-validate="{required:true}" />
+                    </div>
+                </div>
+                <div class="field email required">
+                    <label class="label" for="qa-email"><span><!-- ko i18n: 'Email' --><!-- /ko --></span></label>
+                    <div class="control">
+                        <input type="email" name="author_email" id="qa-email" class="input-text"
+                            data-bind="value: newQuestionEmail"
+                            data-validate="{required:true, 'validate-email':true}" />
+                    </div>
+                </div>
+                <div class="field text required">
+                    <label class="label" for="qa-text"><span><!-- ko i18n: 'Question' --><!-- /ko --></span></label>
+                    <div class="control">
+                        <textarea name="question_text" id="qa-text" class="input-text" cols="5" rows="3"
+                            data-bind="value: newQuestionText" data-validate="{required:true}"></textarea>
+                    </div>
+                </div>
+            </fieldset>
+            <div class="actions-toolbar">
+                <div class="primary">
+                    <button type="submit" class="action submit primary" data-bind="attr: {disabled: isSubmitting}">
+                        <span data-bind="visible: !isSubmitting(), i18n: 'Submit Question'"></span>
+                        <span data-bind="visible: isSubmitting(), i18n: 'Submitting...'" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

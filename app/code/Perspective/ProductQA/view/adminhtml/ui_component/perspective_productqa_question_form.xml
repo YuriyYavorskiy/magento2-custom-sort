@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Perspective. All rights reserved.
+ */
+-->
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">perspective_productqa_question_form.question_form_data_source</item>
+        </item>
+        <item name="label" xsi:type="string" translate="true">Question Information</item>
+        <item name="template" xsi:type="string">templates/form/collapsible</item>
+    </argument>
+    <settings>
+        <buttons>
+            <button name="save" class="Perspective\ProductQA\Block\Adminhtml\Question\Edit\SaveButton"/>
+            <button name="delete" class="Perspective\ProductQA\Block\Adminhtml\Question\Edit\DeleteButton"/>
+            <button name="back" class="Perspective\ProductQA\Block\Adminhtml\Question\Edit\BackButton"/>
+        </buttons>
+        <namespace>perspective_productqa_question_form</namespace>
+        <dataScope>data</dataScope>
+        <deps>
+            <dep>perspective_productqa_question_form.question_form_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="question_form_data_source">
+        <argument name="data" xsi:type="array">
+            <item name="js_config" xsi:type="array">
+                <item name="component" xsi:type="string">Magento_Ui/js/form/provider</item>
+            </item>
+        </argument>
+        <settings>
+            <submitUrl path="productqa/question/save"/>
+        </settings>
+        <dataProvider class="Perspective\ProductQA\Ui\DataProvider\Question\FormDataProvider" name="question_form_data_source">
+            <settings>
+                <requestFieldName>question_id</requestFieldName>
+                <primaryFieldName>question_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <fieldset name="general">
+        <settings>
+            <label translate="true">Question Details</label>
+        </settings>
+        <field name="question_id" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">question</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <visible>false</visible>
+                <dataScope>question_id</dataScope>
+            </settings>
+        </field>
+        <field name="product_id" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">question</item>
+                </item>
+            </argument>
+            <settings>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                </validation>
+                <dataType>text</dataType>
+                <label translate="true">Product ID</label>
+                <dataScope>product_id</dataScope>
+            </settings>
+        </field>
+        <field name="status" formElement="select">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">question</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Status</label>
+                <dataScope>status</dataScope>
+            </settings>
+            <formElements>
+                <select>
+                    <settings>
+                        <options class="Perspective\ProductQA\Model\Question\Source\Status"/>
+                    </settings>
+                </select>
+            </formElements>
+        </field>
+        <field name="author_name" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">question</item>
+                </item>
+            </argument>
+            <settings>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                </validation>
+                <dataType>text</dataType>
+                <label translate="true">Author Name</label>
+                <dataScope>author_name</dataScope>
+            </settings>
+        </field>
+        <field name="author_email" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">question</item>
+                </item>
+            </argument>
+            <settings>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                    <rule name="validate-email" xsi:type="boolean">true</rule>
+                </validation>
+                <dataType>text</dataType>
+                <label translate="true">Author Email</label>
+                <dataScope>author_email</dataScope>
+            </settings>
+        </field>
+        <field name="question_text" formElement="textarea">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">question</item>
+                </item>
+            </argument>
+            <settings>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                </validation>
+                <dataType>text</dataType>
+                <label translate="true">Question Text</label>
+                <dataScope>question_text</dataScope>
+            </settings>
+        </field>
+    </fieldset>
+    <fieldset name="answer_section">
+        <settings>
+            <label translate="true">Provide Answer</label>
+        </settings>
+        <field name="answer_text" formElement="textarea">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">question</item>
+                </item>
+            </argument>
+            <settings>
+                <dataType>text</dataType>
+                <label translate="true">Answer Text</label>
+                <dataScope>answer_text</dataScope>
+            </settings>
+        </field>
+    </fieldset>
+</form>
