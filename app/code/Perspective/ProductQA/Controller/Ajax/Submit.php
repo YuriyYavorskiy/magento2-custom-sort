@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace Perspective\ProductQA\Controller\Ajax;
 
 use Exception;
-use Magento\Customer\Model\Session\Proxy as CustomerSessionProxy;
+use Magento\Customer\Model\Session;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
@@ -31,7 +31,7 @@ class Submit implements HttpPostActionInterface
      * @param JsonFactory $resultJsonFactory
      * @param QuestionRepositoryInterface $questionRepository
      * @param QuestionInterfaceFactory $questionFactory
-     * @param CustomerSessionProxy $customerSession
+     * @param Session $customerSession
      * @param StoreManagerInterface $storeManager
      * @param Validator $formKeyValidator
      * @param LoggerInterface $logger
@@ -41,7 +41,7 @@ class Submit implements HttpPostActionInterface
         private readonly JsonFactory $resultJsonFactory,
         private readonly QuestionRepositoryInterface $questionRepository,
         private readonly QuestionInterfaceFactory $questionFactory,
-        private readonly CustomerSessionProxy $customerSession,
+        private readonly Session $customerSession,
         private readonly StoreManagerInterface $storeManager,
         private readonly Validator $formKeyValidator,
         private readonly LoggerInterface $logger
@@ -54,13 +54,10 @@ class Submit implements HttpPostActionInterface
     public function execute(): ResultInterface
     {
         $result = $this->resultJsonFactory->create();
-
-        if (!$this->formKeyValidator->validate($this->request)) {
-            return $result->setData([
-                'success' => false,
-                'message' => __('Invalid form key. Please refresh the page.')
-            ]);
-        }
+        $responseData = [
+            'success' => false,
+            'message' => ''
+        ];
 
         try {
             $content = $this->request->getContent();
@@ -70,50 +67,42 @@ class Submit implements HttpPostActionInterface
                 $data = $this->request->getParams();
             }
 
-            // Basic validation
-            if (empty($data['product_id']) || empty($data['author_name']) ||
+            if (isset($data['form_key'])) {
+                $this->request->setParam('form_key', $data['form_key']);
+            }
+
+            if (!$this->formKeyValidator->validate($this->request)) {
+                $responseData['message'] = __('Invalid form key. Please refresh the page.');
+            } elseif (empty($data['product_id']) || empty($data['author_name']) ||
                 empty($data['author_email']) || empty($data['question_text'])) {
+                $responseData['message'] = __('Please make sure all required fields are filled out.');
+            } elseif (!filter_var($data['author_email'], FILTER_VALIDATE_EMAIL)) {
+                $responseData['message'] = __('Please enter a valid email address.');
+            } else {
+                $question = $this->questionFactory->create();
+                $question->setProductId((int)$data['product_id']);
+                $question->setAuthorName($data['author_name']);
+                $question->setAuthorEmail($data['author_email']);
+                $question->setQuestionText($data['question_text']);
+                $question->setStatus(Status::STATUS_PENDING);
+                $question->setStoreId((int)$this->storeManager->getStore()->getId());
 
-                return $result->setData([
-                    'success' => false,
-                    'message' => __('Please make sure all required fields are filled out.')
-                ]);
+                if ($this->customerSession->isLoggedIn()) {
+                    $question->setCustomerId((int)$this->customerSession->getCustomerId());
+                }
+
+                $this->questionRepository->save($question);
+
+                $responseData['success'] = true;
+                $responseData['message'] = __('Your question has been submitted and is awaiting approval.');
             }
-
-            if (!filter_var($data['author_email'], FILTER_VALIDATE_EMAIL)) {
-                return $result->setData([
-                    'success' => false,
-                    'message' => __('Please enter a valid email address.')
-                ]);
-            }
-
-            $question = $this->questionFactory->create();
-            $question->setProductId((int)$data['product_id']);
-            $question->setAuthorName($data['author_name']);
-            $question->setAuthorEmail($data['author_email']);
-            $question->setQuestionText($data['question_text']);
-            $question->setStatus(Status::STATUS_PENDING);
-            $question->setStoreId((int)$this->storeManager->getStore()->getId());
-
-            if ($this->customerSession->isLoggedIn()) {
-                $question->setCustomerId((int)$this->customerSession->getCustomerId());
-            }
-
-            $this->questionRepository->save($question);
-
-            return $result->setData([
-                'success' => true,
-                'message' => __('Your question has been submitted and is awaiting approval.')
-            ]);
         } catch (Exception $e) {
             $this->logger->error('ProductQA question submit error: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
-
-            return $result->setData([
-                'success' => false,
-                'message' => __('An error occurred while submitting your question. Please try again later.')
-            ]);
+            $responseData['message'] = __('An error occurred while submitting your question. Please try again later.');
         }
+
+        return $result->setData($responseData);
     }
 }

@@ -1,6 +1,6 @@
 <div class="product-qa-container" data-bind="blockLoader: isLoading">
     <div class="questions-list-section">
-        <h3><!-- ko i18n: 'Customer Questions & Answers' --><!-- /ko --></h3>
+        <h3 data-bind="i18n: 'Customer Questions & Answers'">Customer Questions &amp; Answers</h3>
 
         <!-- ko if: !isLoading() && questions().length === 0 -->
         <p class="no-questions"><!-- ko i18n: 'There are no questions yet. Be the first to ask!' --><!-- /ko --></p>
@@ -40,7 +40,7 @@
     </div>
 
     <div class="question-form-section">
-        <h3><!-- ko i18n: 'Ask a Question' --><!-- /ko --></h3>
+        <h3 data-bind="i18n: 'Ask a Question'">Ask a Question</h3>
 
         <!-- ko if: submitSuccess -->
         <div class="message success">
@@ -58,22 +58,22 @@
             data-bind="submit: submitQuestion, mageInit: {'validation':{}}">
             <fieldset class="fieldset">
                 <div class="field name required">
-                    <label class="label" for="qa-name"><span><!-- ko i18n: 'Name' --><!-- /ko --></span></label>
+                    <label class="label" for="qa-name"><span data-bind="i18n: 'Name'">Name</span></label>
                     <div class="control">
                         <input type="text" name="author_name" id="qa-name" class="input-text"
-                            data-bind="value: newQuestionName" data-validate="{required:true}" />
+                            data-bind="value: newQuestionName" data-validate="{required:true}">
                     </div>
                 </div>
                 <div class="field email required">
-                    <label class="label" for="qa-email"><span><!-- ko i18n: 'Email' --><!-- /ko --></span></label>
+                    <label class="label" for="qa-email"><span data-bind="i18n: 'Email'">Email</span></label>
                     <div class="control">
                         <input type="email" name="author_email" id="qa-email" class="input-text"
                             data-bind="value: newQuestionEmail"
-                            data-validate="{required:true, 'validate-email':true}" />
+                            data-validate="{required:true, 'validate-email':true}">
                     </div>
                 </div>
                 <div class="field text required">
-                    <label class="label" for="qa-text"><span><!-- ko i18n: 'Question' --><!-- /ko --></span></label>
+                    <label class="label" for="qa-text"><span data-bind="i18n: 'Question'">Question</span></label>
                     <div class="control">
                         <textarea name="question_text" id="qa-text" class="input-text" cols="5" rows="3"
                             data-bind="value: newQuestionText" data-validate="{required:true}"></textarea>

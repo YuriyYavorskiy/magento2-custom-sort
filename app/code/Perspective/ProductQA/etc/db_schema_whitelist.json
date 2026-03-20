@@ -1,0 +1,42 @@
+{
+    "perspective_productqa_question": {
+        "column": {
+            "question_id": true,
+            "product_id": true,
+            "customer_id": true,
+            "author_name": true,
+            "author_email": true,
+            "question_text": true,
+            "status": true,
+            "store_id": true,
+            "created_at": true,
+            "updated_at": true
+        },
+        "index": {
+            "PERSPECTIVE_PRODUCTQA_QUESTION_PRODUCT_ID": true,
+            "PERSPECTIVE_PRODUCTQA_QUESTION_STATUS": true,
+            "PERSPECTIVE_PRODUCTQA_QUESTION_STORE_ID": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "PERSPECTIVE_PRDQA_QUESTION_PRD_ID_CAT_PRD_ENTT_ENTT_ID": true,
+            "PERSPECTIVE_PRDQA_QUESTION_CSTR_ID_CSTR_ENTT_ENTT_ID": true,
+            "PERSPECTIVE_PRODUCTQA_QUESTION_STORE_ID_STORE_STORE_ID": true
+        }
+    },
+    "perspective_productqa_answer": {
+        "column": {
+            "answer_id": true,
+            "question_id": true,
+            "admin_user_id": true,
+            "answer_text": true,
+            "created_at": true,
+            "updated_at": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "FK_A77FA323DD4B526956DDA83156ABCF84": true,
+            "PERSPECTIVE_PRODUCTQA_ANSWER_ADMIN_USER_ID_ADMIN_USER_USER_ID": true
+        }
+    }
+}

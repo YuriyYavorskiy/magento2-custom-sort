@@ -7,7 +7,7 @@ This module is built following Magento 2 Best Practices, including Service Contr
 
 ## Features
 - **Frontend KnockoutJS Component**: Modern Q&A block on the PDP. Data loaded exclusively via AJAX REST controller.
-- **Admin UI Grid & Form**: Manure questions, view answers, change status (Pending/Approved/Rejected).
+- **Admin UI Grid & Form**: Manage questions, view answers, change status (Pending/Approved/Rejected), and perform Mass Actions (Approve, Reject, Delete).
 - **Service Contracts**: Full Repository architecture for Questions and Answers.
 - **GraphQL API**: Query approved product questions and submit new questions via mutation.
 - **Access Control List (ACL)**: `view`, `edit`, and `answer` granular permissions in the Admin Panel.

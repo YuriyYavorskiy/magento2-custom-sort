@@ -12,7 +12,7 @@ use Magento\TestFramework\TestCase\AbstractController;
 use Perspective\ProductQA\Api\Data\QuestionInterfaceFactory;
 use Perspective\ProductQA\Api\QuestionRepositoryInterface;
 use Perspective\ProductQA\Model\Question\Source\Status;
-use Zend\Http\Request;
+use Laminas\Http\Request;
 
 class QuestionsTest extends AbstractController
 {
