@@ -60,41 +60,15 @@ class Submit implements HttpPostActionInterface
         ];
 
         try {
-            $content = $this->request->getContent();
-            $data = json_decode($content, true);
+            $data = $this->requestData();
+            $validation = $this->validate($data);
 
-            if (!$data) {
-                $data = $this->request->getParams();
-            }
-
-            if (isset($data['form_key'])) {
-                $this->request->setParam('form_key', $data['form_key']);
-            }
-
-            if (!$this->formKeyValidator->validate($this->request)) {
-                $responseData['message'] = __('Invalid form key. Please refresh the page.');
-            } elseif (empty($data['product_id']) || empty($data['author_name']) ||
-                empty($data['author_email']) || empty($data['question_text'])) {
-                $responseData['message'] = __('Please make sure all required fields are filled out.');
-            } elseif (!filter_var($data['author_email'], FILTER_VALIDATE_EMAIL)) {
-                $responseData['message'] = __('Please enter a valid email address.');
-            } else {
-                $question = $this->questionFactory->create();
-                $question->setProductId((int)$data['product_id']);
-                $question->setAuthorName($data['author_name']);
-                $question->setAuthorEmail($data['author_email']);
-                $question->setQuestionText($data['question_text']);
-                $question->setStatus(Status::STATUS_PENDING);
-                $question->setStoreId((int)$this->storeManager->getStore()->getId());
-
-                if ($this->customerSession->isLoggedIn()) {
-                    $question->setCustomerId((int)$this->customerSession->getCustomerId());
-                }
-
-                $this->questionRepository->save($question);
-
+            if ($validation === true) {
+                $this->saveQuestion($data);
                 $responseData['success'] = true;
                 $responseData['message'] = __('Your question has been submitted and is awaiting approval.');
+            } else {
+                $responseData['message'] = $validation;
             }
         } catch (Exception $e) {
             $this->logger->error('ProductQA question submit error: ' . $e->getMessage(), [
@@ -104,5 +78,82 @@ class Submit implements HttpPostActionInterface
         }
 
         return $result->setData($responseData);
+    }
+
+    /**
+     * Parse and sanitize request data
+     *
+     * @return array
+     */
+    private function requestData(): array
+    {
+        $content = $this->request->getContent();
+        $data = json_decode($content, true);
+
+        if (!$data) {
+            $data = $this->request->getParams();
+        }
+
+        if (isset($data['form_key'])) {
+            $this->request->setParam('form_key', $data['form_key']);
+        }
+
+        // Clean user input to prevent XSS/scripts
+        if (isset($data['author_name']) && is_string($data['author_name'])) {
+            $data['author_name'] = strip_tags($data['author_name']);
+        }
+        
+        if (isset($data['question_text']) && is_string($data['question_text'])) {
+            $data['question_text'] = strip_tags($data['question_text']);
+        }
+
+        return (array)$data;
+    }
+
+    /**
+     * Validate request data
+     *
+     * @param array $data
+     * @return bool|\Magento\Framework\Phrase
+     */
+    private function validate(array $data)
+    {
+        if (!$this->formKeyValidator->validate($this->request)) {
+            return __('Invalid form key. Please refresh the page.');
+        } 
+        
+        if (empty($data['product_id']) || empty($data['author_name']) ||
+            empty($data['author_email']) || empty($data['question_text'])) {
+            return __('Please make sure all required fields are filled out.');
+        } 
+        
+        if (!filter_var($data['author_email'], FILTER_VALIDATE_EMAIL)) {
+            return __('Please enter a valid email address.');
+        }
+        
+        return true;
+    }
+
+    /**
+     * Build and save the question model
+     *
+     * @param array $data
+     * @return void
+     */
+    private function saveQuestion(array $data): void
+    {
+        $question = $this->questionFactory->create();
+        $question->setProductId((int)$data['product_id']);
+        $question->setAuthorName($data['author_name']);
+        $question->setAuthorEmail($data['author_email']);
+        $question->setQuestionText($data['question_text']);
+        $question->setStatus(Status::STATUS_PENDING);
+        $question->setStoreId((int)$this->storeManager->getStore()->getId());
+
+        if ($this->customerSession->isLoggedIn()) {
+            $question->setCustomerId((int)$this->customerSession->getCustomerId());
+        }
+
+        $this->questionRepository->save($question);
     }
 }
