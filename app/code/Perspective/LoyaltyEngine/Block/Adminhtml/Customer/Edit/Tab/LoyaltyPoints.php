@@ -26,6 +26,8 @@ use Perspective\LoyaltyEngine\Model\ResourceModel\Transaction\CollectionFactory 
  */
 class LoyaltyPoints extends Template implements TabInterface
 {
+    private const HISTORY_LIMIT = 50;
+
     /**
      * @param Context $context
      * @param Registry $coreRegistry
@@ -87,7 +89,9 @@ class LoyaltyPoints extends Template implements TabInterface
      */
     public function canShowTab(): bool
     {
-        return $this->getCustomerId() !== null && $this->getCustomerId() > 0;
+        return $this->getCustomerId() !== null
+            && $this->getCustomerId() > 0
+            && $this->_authorization->isAllowed('Perspective_LoyaltyEngine::customer_loyalty');
     }
 
     /**
@@ -170,17 +174,23 @@ class LoyaltyPoints extends Template implements TabInterface
         if ($customerId) {
             $collection->addFieldToFilter('main_table.customer_id', $customerId);
             $collection->setOrder('main_table.transaction_id', Collection::SORT_ORDER_DESC);
-
-            $collection->getSelect()->joinLeft(
-                ['sales_order' => $collection->getTable('sales_order')],
-                'main_table.order_id = sales_order.entity_id',
-                ['order_increment_id' => 'sales_order.increment_id']
-            );
+            $collection->setPageSize(self::HISTORY_LIMIT);
+            $collection->joinOrderIncrementId();
         } else {
             $collection->addFieldToFilter('main_table.customer_id', -1);
         }
 
         return $collection;
+    }
+
+    /**
+     * Get maximum number of latest transactions displayed in the tab.
+     *
+     * @return int
+     */
+    public function getHistoryLimit(): int
+    {
+        return self::HISTORY_LIMIT;
     }
 
     /**
@@ -206,8 +216,9 @@ class LoyaltyPoints extends Template implements TabInterface
         return match ($type) {
             TransactionInterface::TYPE_ACCRUAL => __('Accrual'),
             TransactionInterface::TYPE_REDEMPTION => __('Redemption'),
+            TransactionInterface::TYPE_REFUND => __('Refund'),
             TransactionInterface::TYPE_ADJUSTMENT => __('Adjustment'),
-            default => __(ucfirst($type)),
+            default => __('Other'),
         };
     }
 

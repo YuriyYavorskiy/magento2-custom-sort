@@ -6,7 +6,7 @@ namespace Perspective\LoyaltyEngine\Plugin\Customer\Grid;
 
 use Magento\Customer\Model\ResourceModel\Grid\Collection;
 use Magento\Framework\DB\Select;
-use Zend_Db_Expr;
+use Magento\Framework\DB\Sql\Expression;
 
 /**
  * Plugin to join loyalty balance index table into customer admin grid collection.
@@ -88,7 +88,7 @@ class CollectionPlugin
             $select->joinLeft(
                 [self::LOYALTY_BALANCE_ALIAS => $collection->getTable('loyalty_balance_index')],
                 self::LOYALTY_BALANCE_ALIAS . '.customer_id = main_table.entity_id',
-                [self::LOYALTY_POINTS_FIELD => new Zend_Db_Expr(
+                [self::LOYALTY_POINTS_FIELD => new Expression(
                     'COALESCE(' . self::LOYALTY_BALANCE_ALIAS . '.total_active_points, 0)'
                 )]
             );

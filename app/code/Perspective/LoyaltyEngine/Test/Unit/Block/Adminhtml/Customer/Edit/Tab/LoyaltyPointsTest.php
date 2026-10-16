@@ -86,6 +86,11 @@ class LoyaltyPointsTest extends TestCase
         $this->contextMock->method('getUrlBuilder')
             ->willReturn($this->urlBuilderMock);
 
+        $authorizationMock = $this->createMock(\Magento\Framework\AuthorizationInterface::class);
+        $authorizationMock->method('isAllowed')->willReturn(true);
+        $this->contextMock->method('getAuthorization')
+            ->willReturn($authorizationMock);
+
         $jsonHelperMock = $this->createMock(\Magento\Framework\Json\Helper\Data::class);
         $directoryHelperMock = $this->createMock(\Magento\Directory\Helper\Data::class);
 
@@ -175,10 +180,6 @@ class LoyaltyPointsTest extends TestCase
             ->willReturn(2);
 
         $collectionMock = $this->createMock(Collection::class);
-        $selectMock = $this->createMock(Select::class);
-
-        $collectionMock->method('getSelect')->willReturn($selectMock);
-        $collectionMock->method('getTable')->with('sales_order')->willReturn('sales_order');
 
         $collectionMock->expects($this->once())
             ->method('addFieldToFilter')
@@ -190,13 +191,14 @@ class LoyaltyPointsTest extends TestCase
             ->with('main_table.transaction_id', Collection::SORT_ORDER_DESC)
             ->willReturnSelf();
 
-        $selectMock->expects($this->once())
-            ->method('joinLeft')
-            ->with(
-                ['sales_order' => 'sales_order'],
-                'main_table.order_id = sales_order.entity_id',
-                ['order_increment_id' => 'sales_order.increment_id']
-            );
+        $collectionMock->expects($this->once())
+            ->method('setPageSize')
+            ->with(50)
+            ->willReturnSelf();
+
+        $collectionMock->expects($this->once())
+            ->method('joinOrderIncrementId')
+            ->willReturnSelf();
 
         $this->collectionFactoryMock->expects($this->once())
             ->method('create')

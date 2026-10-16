@@ -80,12 +80,14 @@ class LoyaltyPointsTest extends TestCase
         $quoteMock = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
             ->addMethods(['getCustomerId'])
-            ->onlyMethods(['getData', 'setData', 'getStore'])
+            ->onlyMethods(['getData', 'setData', 'getStore', 'getStoreId'])
             ->getMock();
 
         $quoteMock->expects($this->once())->method('getData')->with('loyalty_points_applied')->willReturn(50.0);
         $quoteMock->expects($this->once())->method('getCustomerId')->willReturn(7);
         $quoteMock->expects($this->any())->method('getStore')->willReturn(null);
+        $quoteMock->expects($this->any())->method('getStoreId')->willReturn(1);
+        $this->calculationServiceMock->expects($this->once())->method('isEnabled')->with(1)->willReturn(true);
 
         $addressMock = $this->createMock(Address::class);
         $shippingMock = $this->createMock(ShippingInterface::class);
@@ -117,12 +119,12 @@ class LoyaltyPointsTest extends TestCase
 
         $this->calculationServiceMock->expects($this->once())
             ->method('calculateMaxRedeemablePoints')
-            ->with(200.0, 100.0)
+            ->with(200.0, 100.0, 1)
             ->willReturn(100.0);
 
         $this->calculationServiceMock->expects($this->once())
             ->method('convertPointsToCurrency')
-            ->with(50.0)
+            ->with(50.0, 1)
             ->willReturn(50.0);
 
         $this->priceCurrencyMock->expects($this->once())

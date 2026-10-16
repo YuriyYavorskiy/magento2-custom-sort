@@ -9,7 +9,6 @@ use Magento\Framework\GraphQl\Exception\GraphQlAuthorizationException;
 use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 use Magento\GraphQl\Model\Query\ContextInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
-use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Magento\QuoteGraphQl\Model\Cart\GetCartForUser;
 use Magento\Store\Api\Data\StoreInterface;
@@ -31,7 +30,6 @@ class ApplyLoyaltyPointsToCartTest extends TestCase
     /**
      * @var CartRepositoryInterface|MockObject
      */
-    private CartRepositoryInterface|MockObject $cartRepositoryMock;
 
     /**
      * @var LoyaltyManagementInterface|MockObject
@@ -46,12 +44,10 @@ class ApplyLoyaltyPointsToCartTest extends TestCase
     protected function setUp(): void
     {
         $this->getCartForUserMock = $this->createMock(GetCartForUser::class);
-        $this->cartRepositoryMock = $this->createMock(CartRepositoryInterface::class);
         $this->loyaltyManagementMock = $this->createMock(LoyaltyManagementInterface::class);
 
         $this->resolver = new ApplyLoyaltyPointsToCart(
             $this->getCartForUserMock,
-            $this->cartRepositoryMock,
             $this->loyaltyManagementMock
         );
     }

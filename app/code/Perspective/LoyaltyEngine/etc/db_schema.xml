@@ -14,11 +14,16 @@
                 comment="Transaction Type: accrual, redemption, adjustment"/>
         <column xsi:type="varchar" name="comment" length="255" nullable="true"
                 comment="Transaction Comment"/>
+        <column xsi:type="varchar" name="reference_key" length="64" nullable="true"
+                comment="Idempotency key, e.g. accrual:ORDER_ID"/>
         <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP"
                 comment="Created At"/>
 
         <constraint xsi:type="primary" referenceId="PRIMARY">
             <column name="transaction_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="LOYALTY_TRANSACTIONS_REFERENCE_KEY">
+            <column name="reference_key"/>
         </constraint>
         <constraint xsi:type="foreign" referenceId="FK_LOYALTY_TRANSACTIONS_CUSTOMER_ID"
                     table="loyalty_transactions" column="customer_id"
@@ -68,5 +73,19 @@
                 comment="Loyalty Discount Amount"/>
         <column xsi:type="decimal" name="base_loyalty_discount_amount" scale="4" precision="12" nullable="false" default="0.0000"
                 comment="Base Loyalty Discount Amount"/>
+    </table>
+
+    <table name="sales_invoice" resource="sales" engine="innodb">
+        <column xsi:type="decimal" name="loyalty_discount_amount" scale="4" precision="12" nullable="false"
+                default="0.0000" comment="Loyalty Discount Amount"/>
+        <column xsi:type="decimal" name="base_loyalty_discount_amount" scale="4" precision="12" nullable="false"
+                default="0.0000" comment="Base Loyalty Discount Amount"/>
+    </table>
+
+    <table name="sales_creditmemo" resource="sales" engine="innodb">
+        <column xsi:type="decimal" name="loyalty_discount_amount" scale="4" precision="12" nullable="false"
+                default="0.0000" comment="Loyalty Discount Amount"/>
+        <column xsi:type="decimal" name="base_loyalty_discount_amount" scale="4" precision="12" nullable="false"
+                default="0.0000" comment="Base Loyalty Discount Amount"/>
     </table>
 </schema>

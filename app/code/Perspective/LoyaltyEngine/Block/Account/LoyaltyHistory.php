@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Perspective\LoyaltyEngine\Block\Account;
 
 use Magento\Customer\Model\Session;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
@@ -81,11 +80,7 @@ class LoyaltyHistory extends Template
             return 0.0;
         }
 
-        try {
-            return $this->balanceRepository->getByCustomerId($customerId)->getTotalActivePoints();
-        } catch (NoSuchEntityException) {
-            return 0.0;
-        }
+        return $this->balanceRepository->getByCustomerId($customerId)->getTotalActivePoints();
     }
 
     /**
@@ -99,11 +94,7 @@ class LoyaltyHistory extends Template
             $customerId = (int)$this->customerSession->getCustomerId();
             $collection = $this->collectionFactory->create();
             $collection->addFieldToFilter('main_table.' . TransactionInterface::CUSTOMER_ID, $customerId);
-            $collection->getSelect()->joinLeft(
-                ['sales_order' => $collection->getTable('sales_order')],
-                'main_table.order_id = sales_order.entity_id',
-                ['order_increment_id' => 'sales_order.increment_id']
-            );
+            $collection->joinOrderIncrementId();
             $collection->setOrder('main_table.' . TransactionInterface::TRANSACTION_ID, 'DESC');
             $this->transactions = $collection;
         }

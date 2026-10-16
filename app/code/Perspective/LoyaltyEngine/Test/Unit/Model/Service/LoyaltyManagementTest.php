@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Perspective\LoyaltyEngine\Test\Unit\Model\Service;
 
+use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
@@ -13,8 +14,6 @@ use Perspective\LoyaltyEngine\Api\Data\BalanceInterface;
 use Perspective\LoyaltyEngine\Api\Data\TransactionInterface;
 use Perspective\LoyaltyEngine\Api\LoyaltyCalculationServiceInterface;
 use Perspective\LoyaltyEngine\Api\TransactionRepositoryInterface;
-use Perspective\LoyaltyEngine\Model\ResourceModel\Transaction\Collection as TransactionCollection;
-use Perspective\LoyaltyEngine\Model\ResourceModel\Transaction\CollectionFactory as TransactionCollectionFactory;
 use Perspective\LoyaltyEngine\Model\Service\LoyaltyManagement;
 use Perspective\LoyaltyEngine\Model\Transaction;
 use Perspective\LoyaltyEngine\Model\TransactionFactory;
@@ -53,11 +52,6 @@ class LoyaltyManagementTest extends TestCase
     private TransactionFactory|MockObject $transactionFactoryMock;
 
     /**
-     * @var TransactionCollectionFactory|MockObject
-     */
-    private TransactionCollectionFactory|MockObject $transactionCollectionFactoryMock;
-
-    /**
      * @var LoggerInterface|MockObject
      */
     private LoggerInterface|MockObject $loggerMock;
@@ -77,8 +71,8 @@ class LoyaltyManagementTest extends TestCase
         $this->calculationServiceMock = $this->createMock(LoyaltyCalculationServiceInterface::class);
         $this->transactionRepositoryMock = $this->createMock(TransactionRepositoryInterface::class);
         $this->transactionFactoryMock = $this->createMock(TransactionFactory::class);
-        $this->transactionCollectionFactoryMock = $this->createMock(TransactionCollectionFactory::class);
         $this->loggerMock = $this->createMock(LoggerInterface::class);
+        $this->calculationServiceMock->method('isEnabled')->willReturn(true);
 
         $this->service = new LoyaltyManagement(
             $this->cartRepositoryMock,
@@ -86,7 +80,6 @@ class LoyaltyManagementTest extends TestCase
             $this->calculationServiceMock,
             $this->transactionRepositoryMock,
             $this->transactionFactoryMock,
-            $this->transactionCollectionFactoryMock,
             $this->loggerMock
         );
     }
@@ -101,7 +94,7 @@ class LoyaltyManagementTest extends TestCase
         return $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
             ->addMethods(['getCustomerId', 'setTotalsCollectedFlag', 'getBaseSubtotal'])
-            ->onlyMethods(['setData', 'collectTotals'])
+            ->onlyMethods(['setData', 'collectTotals', 'getStoreId'])
             ->getMock();
     }
 
@@ -165,21 +158,12 @@ class LoyaltyManagementTest extends TestCase
 
         $this->calculationServiceMock->expects($this->once())
             ->method('calculateMaxRedeemablePoints')
-            ->with(100.0, 50.0)
+            ->with(100.0, 50.0, 0)
             ->willReturn(50.0);
 
-        $this->calculationServiceMock->expects($this->once())
-            ->method('convertPointsToCurrency')
-            ->with(20.0)
-            ->willReturn(20.0);
-
-        $quoteMock->expects($this->exactly(3))
+        $quoteMock->expects($this->once())
             ->method('setData')
-            ->withConsecutive(
-                ['loyalty_points_applied', 20.0],
-                ['loyalty_discount_amount', 20.0],
-                ['base_loyalty_discount_amount', 20.0]
-            );
+            ->with('loyalty_points_applied', 20.0);
 
         $quoteMock->expects($this->once())->method('setTotalsCollectedFlag')->with(false);
         $quoteMock->expects($this->once())->method('collectTotals');
@@ -194,13 +178,9 @@ class LoyaltyManagementTest extends TestCase
         $quoteMock = $this->createQuoteMock();
         $this->cartRepositoryMock->expects($this->once())->method('get')->with(10)->willReturn($quoteMock);
 
-        $quoteMock->expects($this->exactly(3))
+        $quoteMock->expects($this->once())
             ->method('setData')
-            ->withConsecutive(
-                ['loyalty_points_applied', 0.0],
-                ['loyalty_discount_amount', 0.0],
-                ['base_loyalty_discount_amount', 0.0]
-            );
+            ->with('loyalty_points_applied', 0.0);
 
         $quoteMock->expects($this->once())->method('setTotalsCollectedFlag')->with(false);
         $quoteMock->expects($this->once())->method('collectTotals');
@@ -215,29 +195,45 @@ class LoyaltyManagementTest extends TestCase
         $orderMock = $this->createMock(Order::class);
         $orderMock->expects($this->once())->method('getEntityId')->willReturn(null);
 
-        $this->transactionCollectionFactoryMock->expects($this->never())->method('create');
+        $this->transactionRepositoryMock->expects($this->never())->method('save');
         $this->service->recordOrderRedemption($orderMock);
     }
 
-    public function testRecordOrderRedemptionSkipsWhenDuplicate(): void
+    public function testRecordOrderRedemptionIgnoresAlreadyRecordedOperation(): void
     {
         $orderMock = $this->createMock(Order::class);
         $orderMock->expects($this->once())->method('getEntityId')->willReturn(8);
         $orderMock->expects($this->once())->method('getCustomerId')->willReturn(2);
         $orderMock->expects($this->once())->method('getData')->with('loyalty_points_applied')->willReturn(20.0);
 
-        $collectionMock = $this->createMock(TransactionCollection::class);
-        $collectionMock->expects($this->exactly(2))
-            ->method('addFieldToFilter')
-            ->willReturnSelf();
-        $collectionMock->expects($this->once())->method('getSize')->willReturn(1);
+        $transactionMock = $this->createMock(Transaction::class);
+        $this->transactionFactoryMock->expects($this->once())->method('create')->willReturn($transactionMock);
 
-        $this->transactionCollectionFactoryMock->expects($this->once())
+        $this->transactionRepositoryMock->expects($this->once())
+            ->method('save')
+            ->willThrowException(new AlreadyExistsException(__('Already recorded')));
+
+        $this->loggerMock->expects($this->never())->method('info');
+
+        $this->service->recordOrderRedemption($orderMock);
+    }
+
+    public function testRecordOrderRedemptionPropagatesFailureToAbortOrder(): void
+    {
+        $orderMock = $this->createMock(Order::class);
+        $orderMock->expects($this->once())->method('getEntityId')->willReturn(8);
+        $orderMock->expects($this->once())->method('getCustomerId')->willReturn(2);
+        $orderMock->expects($this->once())->method('getData')->with('loyalty_points_applied')->willReturn(20.0);
+
+        $this->transactionFactoryMock->expects($this->once())
             ->method('create')
-            ->willReturn($collectionMock);
+            ->willReturn($this->createMock(Transaction::class));
 
-        $this->transactionFactoryMock->expects($this->never())->method('create');
-        $this->transactionRepositoryMock->expects($this->never())->method('save');
+        $this->transactionRepositoryMock->expects($this->once())
+            ->method('save')
+            ->willThrowException(new LocalizedException(__('Insufficient loyalty points balance.')));
+
+        $this->expectException(LocalizedException::class);
 
         $this->service->recordOrderRedemption($orderMock);
     }
@@ -250,21 +246,12 @@ class LoyaltyManagementTest extends TestCase
         $orderMock->expects($this->once())->method('getData')->with('loyalty_points_applied')->willReturn(20.0);
         $orderMock->expects($this->once())->method('getIncrementId')->willReturn('000000008');
 
-        $collectionMock = $this->createMock(TransactionCollection::class);
-        $collectionMock->expects($this->exactly(2))
-            ->method('addFieldToFilter')
-            ->willReturnSelf();
-        $collectionMock->expects($this->once())->method('getSize')->willReturn(0);
-
-        $this->transactionCollectionFactoryMock->expects($this->once())
-            ->method('create')
-            ->willReturn($collectionMock);
-
         $transactionMock = $this->createMock(Transaction::class);
         $transactionMock->expects($this->once())->method('setCustomerId')->with(2);
         $transactionMock->expects($this->once())->method('setOrderId')->with(8);
         $transactionMock->expects($this->once())->method('setPoints')->with(-20.0);
         $transactionMock->expects($this->once())->method('setType')->with(TransactionInterface::TYPE_REDEMPTION);
+        $transactionMock->expects($this->once())->method('setReferenceKey')->with('redemption:8');
         $transactionMock->expects($this->once())
             ->method('setComment')
             ->with('Redeemed points for order #000000008');

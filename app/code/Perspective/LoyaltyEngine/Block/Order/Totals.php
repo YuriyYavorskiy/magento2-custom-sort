@@ -92,9 +92,13 @@ class Totals extends Template
             return $this;
         }
 
-        $discount = (float)$order->getData('loyalty_discount_amount');
+        // Invoices and credit memos carry their own (partial) discount, order view shows the full amount.
+        $source = $this->getSource();
+        $amountHolder = $source instanceof Order || !$source instanceof DataObject ? $order : $source;
+
+        $discount = (float)$amountHolder->getData('loyalty_discount_amount');
         if ($discount > 0.0) {
-            $baseDiscount = (float)$order->getData('base_loyalty_discount_amount');
+            $baseDiscount = (float)$amountHolder->getData('base_loyalty_discount_amount');
             $total = new DataObject([
                 'code' => 'loyalty_points',
                 'strong' => false,

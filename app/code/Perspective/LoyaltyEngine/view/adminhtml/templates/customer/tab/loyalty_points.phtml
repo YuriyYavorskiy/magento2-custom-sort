@@ -42,6 +42,17 @@ $maxRedemptionPercent = $block->getMaxRedemptionPercentage();
         </div>
 
         <?php if ($transactions && $transactions->getSize() > 0): ?>
+            <?php if ($transactions->getSize() > $block->getHistoryLimit()): ?>
+                <p class="loyalty-admin-terms">
+                    <?= $escaper->escapeHtml(
+                        __(
+                            'Showing the latest %1 transactions of %2.',
+                            $block->getHistoryLimit(),
+                            $transactions->getSize()
+                        )
+                    ) ?>
+                </p>
+            <?php endif; ?>
             <div class="admin__table-wrapper">
                 <table class="data-grid data-table admin__table-primary loyalty-admin-table">
                     <thead>

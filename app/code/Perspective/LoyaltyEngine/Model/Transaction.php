@@ -136,4 +136,21 @@ class Transaction extends AbstractModel implements TransactionInterface
     {
         return $this->setData(self::CREATED_AT, $createdAt);
     }
+
+    /**
+     * @inheritdoc
+     */
+    public function getReferenceKey(): ?string
+    {
+        $key = $this->getData(self::REFERENCE_KEY);
+        return $key !== null ? (string)$key : null;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setReferenceKey(?string $referenceKey): self
+    {
+        return $this->setData(self::REFERENCE_KEY, $referenceKey);
+    }
 }

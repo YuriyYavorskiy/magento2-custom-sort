@@ -10,6 +10,7 @@ use Magento\Framework\MessageQueue\PublisherInterface;
 use Magento\Sales\Model\Order;
 use Perspective\LoyaltyEngine\Api\Data\OrderAccrualMessageInterfaceFactory;
 use Perspective\LoyaltyEngine\Api\Data\TransactionInterface;
+use Perspective\LoyaltyEngine\Api\LoyaltyCalculationServiceInterface;
 use Perspective\LoyaltyEngine\Model\ResourceModel\Transaction\CollectionFactory as TransactionCollectionFactory;
 use Psr\Log\LoggerInterface;
 
@@ -24,12 +25,14 @@ class OrderCompleteAccrualObserver implements ObserverInterface
      * @param PublisherInterface $publisher
      * @param OrderAccrualMessageInterfaceFactory $messageFactory
      * @param TransactionCollectionFactory $transactionCollectionFactory
+     * @param LoyaltyCalculationServiceInterface $calculationService
      * @param LoggerInterface $logger
      */
     public function __construct(
         private readonly PublisherInterface $publisher,
         private readonly OrderAccrualMessageInterfaceFactory $messageFactory,
         private readonly TransactionCollectionFactory $transactionCollectionFactory,
+        private readonly LoyaltyCalculationServiceInterface $calculationService,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -61,8 +64,13 @@ class OrderCompleteAccrualObserver implements ObserverInterface
             return false;
         }
 
+        // Only react to the transition into the complete state, not to every later save of the order
+        if ($order->getOrigData('state') === Order::STATE_COMPLETE) {
+            return false;
+        }
+
         $customerId = (int)$order->getCustomerId();
-        if ($customerId <= 0) {
+        if ($customerId <= 0 || !$this->calculationService->isEnabled((int)$order->getStoreId())) {
             return false;
         }
 

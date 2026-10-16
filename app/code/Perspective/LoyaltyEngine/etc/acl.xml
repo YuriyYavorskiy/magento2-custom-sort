@@ -4,6 +4,11 @@
     <acl>
         <resources>
             <resource id="Magento_Backend::admin">
+                <resource id="Magento_Customer::customer">
+                    <resource id="Magento_Customer::manage">
+                        <resource id="Perspective_LoyaltyEngine::customer_loyalty" title="View Customer Loyalty Points"/>
+                    </resource>
+                </resource>
                 <resource id="Magento_Backend::stores">
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">

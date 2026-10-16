@@ -12,6 +12,7 @@
         "magento/module-checkout": "*",
         "magento/module-indexer": "*",
         "magento/module-graphql": "*",
+        "magento/framework-message-queue": "*",
         "ext-intl": "*"
     },
     "autoload": {

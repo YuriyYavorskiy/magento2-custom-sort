@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Perspective\LoyaltyEngine\Model\Queue;
 
+use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Perspective\LoyaltyEngine\Api\Data\OrderAccrualMessageInterface;
@@ -45,26 +46,33 @@ class OrderAccrualConsumer
      */
     public function process(OrderAccrualMessageInterface $message): void
     {
-        $orderId = $message->getOrderId();
-        $customerId = $message->getCustomerId();
+        try {
+            $orderId = $message->getOrderId();
+            $customerId = $message->getCustomerId();
 
-        if ($orderId <= 0 || $customerId <= 0) {
-            $this->logger->warning(
-                sprintf('Invalid accrual message: orderId=%d, customerId=%d', $orderId, $customerId)
+            if ($orderId <= 0 || $customerId <= 0) {
+                $this->logger->warning(
+                    sprintf('Invalid accrual message: orderId=%d, customerId=%d', $orderId, $customerId)
+                );
+                return;
+            }
+
+            if ($this->isAlreadyAccrued($orderId)) {
+                $this->logger->info(
+                    sprintf('Loyalty points already accrued for order #%d. Skipping.', $orderId)
+                );
+                return;
+            }
+
+            $order = $this->loadValidOrder($orderId, $customerId);
+            if ($order) {
+                $this->accruePointsForOrder($order, $orderId, $customerId);
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                sprintf('Error processing loyalty accrual message: %s', $e->getMessage()),
+                ['exception' => $e]
             );
-            return;
-        }
-
-        if ($this->isAlreadyAccrued($orderId)) {
-            $this->logger->info(
-                sprintf('Loyalty points already accrued for order #%d. Skipping.', $orderId)
-            );
-            return;
-        }
-
-        $order = $this->loadValidOrder($orderId, $customerId);
-        if ($order) {
-            $this->accruePointsForOrder($order, $orderId, $customerId);
         }
     }
 
@@ -129,12 +137,13 @@ class OrderAccrualConsumer
         int $orderId,
         int $customerId
     ): void {
-        $baseSubtotal = (float)$order->getBaseSubtotal();
-        $points = $this->calculationService->calculateCashbackPoints($baseSubtotal);
+        $storeId = (int)$order->getStoreId();
+        $cashbackBase = $this->getCashbackBase($order);
+        $points = $this->calculationService->calculateCashbackPoints($cashbackBase, $storeId);
 
         if ($points <= 0.0) {
             $this->logger->info(
-                sprintf('Calculated 0 cashback points for order #%d (subtotal: %f).', $orderId, $baseSubtotal)
+                sprintf('Calculated 0 cashback points for order #%d (base: %f).', $orderId, $cashbackBase)
             );
             return;
         }
@@ -144,12 +153,39 @@ class OrderAccrualConsumer
         $transaction->setOrderId($orderId);
         $transaction->setPoints($points);
         $transaction->setType(TransactionInterface::TYPE_ACCRUAL);
-        $transaction->setComment(sprintf('Cashback 5%% for order #%s', $order->getIncrementId()));
+        $transaction->setReferenceKey('accrual:' . $orderId);
+        $transaction->setComment(
+            sprintf(
+                'Cashback %s%% for order #%s',
+                (string)$this->calculationService->getAccrualPercentage($storeId),
+                $order->getIncrementId()
+            )
+        );
 
-        $this->transactionRepository->save($transaction);
+        try {
+            $this->transactionRepository->save($transaction);
+        } catch (AlreadyExistsException) {
+            $this->logger->info(sprintf('Loyalty points already accrued for order #%d. Skipping.', $orderId));
+            return;
+        }
 
         $this->logger->info(
             sprintf('Accrued %f loyalty points for customer #%d on order #%d.', $points, $customerId, $orderId)
         );
+    }
+
+    /**
+     * Cashback base: subtotal after catalog/cart discounts, excluding the part paid with loyalty points.
+     *
+     * @param \Magento\Sales\Api\Data\OrderInterface $order
+     * @return float
+     */
+    private function getCashbackBase(\Magento\Sales\Api\Data\OrderInterface $order): float
+    {
+        $base = (float)$order->getBaseSubtotal()
+            + (float)$order->getBaseDiscountAmount()
+            - (float)$order->getData('base_loyalty_discount_amount');
+
+        return max(0.0, $base);
     }
 }

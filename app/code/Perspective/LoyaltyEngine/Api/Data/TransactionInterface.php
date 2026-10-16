@@ -20,6 +20,7 @@ interface TransactionInterface extends ExtensibleDataInterface
     public const TYPE = 'type';
     public const COMMENT = 'comment';
     public const CREATED_AT = 'created_at';
+    public const REFERENCE_KEY = 'reference_key';
 
     public const TYPE_ACCRUAL = 'accrual';
     public const TYPE_REDEMPTION = 'redemption';
@@ -130,4 +131,19 @@ interface TransactionInterface extends ExtensibleDataInterface
      * @return $this
      */
     public function setCreatedAt(?string $createdAt): self;
+
+    /**
+     * Get idempotency reference key.
+     *
+     * @return string|null
+     */
+    public function getReferenceKey(): ?string;
+
+    /**
+     * Set idempotency reference key (unique per ledger operation, e.g. "accrual:123").
+     *
+     * @param string|null $referenceKey
+     * @return $this
+     */
+    public function setReferenceKey(?string $referenceKey): self;
 }

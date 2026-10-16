@@ -106,14 +106,20 @@ class OrderAccrualConsumerTest extends TestCase
 
         $this->calculationServiceMock->expects($this->once())
             ->method('calculateCashbackPoints')
-            ->with(200.0)
+            ->with(200.0, 0)
             ->willReturn(10.0);
+
+        $this->calculationServiceMock->expects($this->once())
+            ->method('getAccrualPercentage')
+            ->with(0)
+            ->willReturn(5.0);
 
         $transactionMock = $this->createMock(Transaction::class);
         $transactionMock->expects($this->once())->method('setCustomerId')->with(5);
         $transactionMock->expects($this->once())->method('setOrderId')->with(101);
         $transactionMock->expects($this->once())->method('setPoints')->with(10.0);
         $transactionMock->expects($this->once())->method('setType')->with(TransactionInterface::TYPE_ACCRUAL);
+        $transactionMock->expects($this->once())->method('setReferenceKey')->with('accrual:101');
         $transactionMock->expects($this->once())->method('setComment')->with('Cashback 5% for order #100000101');
 
         $this->transactionFactoryMock->expects($this->once())

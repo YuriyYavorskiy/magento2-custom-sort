@@ -36,4 +36,25 @@ class Collection extends AbstractCollection
         $this->addFilterToMap('comment', 'main_table.comment');
         $this->addFilterToMap('created_at', 'main_table.created_at');
     }
+
+    /**
+     * Join order increment ID from sales_order table.
+     *
+     * @return $this
+     */
+    public function joinOrderIncrementId(): self
+    {
+        $select = $this->getSelect();
+        $fromPart = $select->getPart(\Magento\Framework\DB\Select::FROM);
+
+        if (!isset($fromPart['sales_order'])) {
+            $select->joinLeft(
+                ['sales_order' => $this->getTable('sales_order')],
+                'main_table.order_id = sales_order.entity_id',
+                ['order_increment_id' => 'sales_order.increment_id']
+            );
+        }
+
+        return $this;
+    }
 }

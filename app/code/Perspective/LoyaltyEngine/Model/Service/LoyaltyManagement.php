@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Perspective\LoyaltyEngine\Model\Service;
 
+use Magento\Framework\Exception\AlreadyExistsException;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Sales\Api\Data\OrderInterface;
@@ -14,7 +14,6 @@ use Perspective\LoyaltyEngine\Api\Data\TransactionInterface;
 use Perspective\LoyaltyEngine\Api\LoyaltyCalculationServiceInterface;
 use Perspective\LoyaltyEngine\Api\LoyaltyManagementInterface;
 use Perspective\LoyaltyEngine\Api\TransactionRepositoryInterface;
-use Perspective\LoyaltyEngine\Model\ResourceModel\Transaction\CollectionFactory as TransactionCollectionFactory;
 use Perspective\LoyaltyEngine\Model\TransactionFactory;
 use Psr\Log\LoggerInterface;
 
@@ -29,7 +28,6 @@ class LoyaltyManagement implements LoyaltyManagementInterface
      * @param LoyaltyCalculationServiceInterface $calculationService
      * @param TransactionRepositoryInterface $transactionRepository
      * @param TransactionFactory $transactionFactory
-     * @param TransactionCollectionFactory $transactionCollectionFactory
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -38,7 +36,6 @@ class LoyaltyManagement implements LoyaltyManagementInterface
         private readonly LoyaltyCalculationServiceInterface $calculationService,
         private readonly TransactionRepositoryInterface $transactionRepository,
         private readonly TransactionFactory $transactionFactory,
-        private readonly TransactionCollectionFactory $transactionCollectionFactory,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -49,6 +46,11 @@ class LoyaltyManagement implements LoyaltyManagementInterface
     public function applyPoints(int $cartId, float $points): bool
     {
         $quote = $this->cartRepository->get($cartId);
+        $storeId = (int)$quote->getStoreId();
+
+        if (!$this->calculationService->isEnabled($storeId)) {
+            throw new LocalizedException(__('Loyalty points program is disabled.'));
+        }
 
         $customerId = (int)$quote->getCustomerId();
         if ($customerId <= 0) {
@@ -69,7 +71,8 @@ class LoyaltyManagement implements LoyaltyManagementInterface
         $baseSubtotal = (float)$quote->getBaseSubtotal();
         $maxPoints = $this->calculationService->calculateMaxRedeemablePoints(
             $baseSubtotal,
-            $balance->getTotalActivePoints()
+            $balance->getTotalActivePoints(),
+            $storeId
         );
 
         if ($points > $maxPoints) {
@@ -77,16 +80,13 @@ class LoyaltyManagement implements LoyaltyManagementInterface
                 __(
                     'Cannot apply more than %1 points (maximum %2%% of cart value).',
                     $maxPoints,
-                    $this->calculationService->getMaxRedemptionPercentage()
+                    $this->calculationService->getMaxRedemptionPercentage($storeId)
                 )
             );
         }
 
-        $discount = $this->calculationService->convertPointsToCurrency($points);
-
+        // Only the points amount is stored here: discount amounts are calculated by the quote total collector.
         $quote->setData('loyalty_points_applied', $points);
-        $quote->setData('loyalty_discount_amount', $discount);
-        $quote->setData('base_loyalty_discount_amount', $discount);
 
         if ($quote instanceof Quote) {
             $quote->setTotalsCollectedFlag(false);
@@ -106,8 +106,6 @@ class LoyaltyManagement implements LoyaltyManagementInterface
         $quote = $this->cartRepository->get($cartId);
 
         $quote->setData('loyalty_points_applied', 0.0);
-        $quote->setData('loyalty_discount_amount', 0.0);
-        $quote->setData('base_loyalty_discount_amount', 0.0);
 
         if ($quote instanceof Quote) {
             $quote->setTotalsCollectedFlag(false);
@@ -132,37 +130,23 @@ class LoyaltyManagement implements LoyaltyManagementInterface
             return;
         }
 
-        $existing = $this->transactionCollectionFactory->create()
-            ->addFieldToFilter(TransactionInterface::ORDER_ID, $orderId)
-            ->addFieldToFilter(TransactionInterface::TYPE, TransactionInterface::TYPE_REDEMPTION)
-            ->getSize();
+        $transaction = $this->transactionFactory->create();
+        $transaction->setCustomerId($customerId);
+        $transaction->setOrderId($orderId);
+        $transaction->setPoints(-$points);
+        $transaction->setType(TransactionInterface::TYPE_REDEMPTION);
+        $transaction->setReferenceKey('redemption:' . $orderId);
+        $transaction->setComment(sprintf('Redeemed points for order #%s', (string)$order->getIncrementId()));
 
-        if ($existing > 0) {
+        try {
+            // Runs inside the order save transaction: any failure (e.g. insufficient balance) aborts the order.
+            $this->transactionRepository->save($transaction);
+        } catch (AlreadyExistsException) {
             return;
         }
 
-        try {
-            $transaction = $this->transactionFactory->create();
-            $transaction->setCustomerId($customerId);
-            $transaction->setOrderId($orderId);
-            $transaction->setPoints(-$points);
-            $transaction->setType(TransactionInterface::TYPE_REDEMPTION);
-            $transaction->setComment(sprintf('Redeemed points for order #%s', (string)$order->getIncrementId()));
-
-            $this->transactionRepository->save($transaction);
-
-            $this->logger->info(
-                sprintf(
-                    'Recorded redemption of %f points for customer #%d on order #%d',
-                    $points,
-                    $customerId,
-                    $orderId
-                )
-            );
-        } catch (\Exception $e) {
-            $this->logger->error(
-                sprintf('Failed to record loyalty redemption for order #%d: %s', $orderId, $e->getMessage())
-            );
-        }
+        $this->logger->info(
+            sprintf('Recorded redemption of %f points for customer #%d on order #%d', $points, $customerId, $orderId)
+        );
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Perspective\LoyaltyEngine\Model;
 
-use Magento\Framework\Exception\CouldNotSaveException;
 use Perspective\LoyaltyEngine\Api\BalanceRepositoryInterface;
 use Perspective\LoyaltyEngine\Api\Data\BalanceInterface;
 use Perspective\LoyaltyEngine\Model\ResourceModel\Balance as BalanceResource;
@@ -35,24 +34,6 @@ class BalanceRepository implements BalanceRepositoryInterface
         if (!$balance->getCustomerId()) {
             $balance->setCustomerId($customerId);
             $balance->setTotalActivePoints(0.0);
-        }
-
-        return $balance;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function save(BalanceInterface $balance): BalanceInterface
-    {
-        try {
-            /** @var Balance $balance */
-            $this->resource->save($balance);
-        } catch (\Exception $exception) {
-            throw new CouldNotSaveException(
-                __('Could not save loyalty balance: %1', $exception->getMessage()),
-                $exception
-            );
         }
 
         return $balance;

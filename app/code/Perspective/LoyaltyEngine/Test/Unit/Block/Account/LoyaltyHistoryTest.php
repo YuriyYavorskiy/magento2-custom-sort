@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Perspective\LoyaltyEngine\Test\Unit\Block\Account;
 
 use Magento\Customer\Model\Session;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\View\Element\Template\Context;
 use Perspective\LoyaltyEngine\Api\BalanceRepositoryInterface;
@@ -106,20 +105,6 @@ class LoyaltyHistoryTest extends TestCase
             ->willReturn($balanceMock);
 
         $this->assertSame(125.50, $this->block->getActivePoints());
-    }
-
-    public function testGetActivePointsReturnsZeroOnNoSuchEntityException(): void
-    {
-        $this->customerSessionMock->expects($this->once())
-            ->method('getCustomerId')
-            ->willReturn(42);
-
-        $this->balanceRepositoryMock->expects($this->once())
-            ->method('getByCustomerId')
-            ->with(42)
-            ->willThrowException(new NoSuchEntityException(__('Not found')));
-
-        $this->assertSame(0.0, $this->block->getActivePoints());
     }
 
     public function testFormatPoints(): void

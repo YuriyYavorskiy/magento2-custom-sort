@@ -20,6 +20,13 @@ class LoyaltyPoints extends AbstractTotal
     public const CODE = 'loyalty_points';
 
     /**
+     * Per-request balance cache: totals are collected many times during checkout.
+     *
+     * @var array<int, float>
+     */
+    private array $balanceCache = [];
+
+    /**
      * @param BalanceRepositoryInterface $balanceRepository
      * @param LoyaltyCalculationServiceInterface $calculationService
      * @param PriceCurrencyInterface $priceCurrency
@@ -73,15 +80,38 @@ class LoyaltyPoints extends AbstractTotal
         $appliedPoints = (float)$quote->getData('loyalty_points_applied');
         $customerId = (int)$quote->getCustomerId();
 
-        if ($appliedPoints <= 0.0 || $customerId <= 0) {
+        $storeId = (int)$quote->getStoreId();
+
+        if ($appliedPoints <= 0.0 || $customerId <= 0 || !$this->calculationService->isEnabled($storeId)) {
             return 0.0;
         }
 
-        $customerBalance = $this->balanceRepository->getByCustomerId($customerId)->getTotalActivePoints();
+        $customerBalance = $this->getCustomerBalance($customerId);
         $baseSubtotal = (float)$total->getBaseSubtotal();
-        $maxPoints = $this->calculationService->calculateMaxRedeemablePoints($baseSubtotal, $customerBalance);
+        $maxPoints = $this->calculationService->calculateMaxRedeemablePoints(
+            $baseSubtotal,
+            $customerBalance,
+            $storeId
+        );
 
         return max(0.0, min($appliedPoints, $maxPoints));
+    }
+
+    /**
+     * Retrieve customer balance using in-memory cache.
+     *
+     * @param int $customerId
+     * @return float
+     */
+    private function getCustomerBalance(int $customerId): float
+    {
+        if (!isset($this->balanceCache[$customerId])) {
+            $this->balanceCache[$customerId] = $this->balanceRepository
+                ->getByCustomerId($customerId)
+                ->getTotalActivePoints();
+        }
+
+        return $this->balanceCache[$customerId];
     }
 
     /**
@@ -94,7 +124,7 @@ class LoyaltyPoints extends AbstractTotal
      */
     private function applyPointsDiscount(Quote $quote, Total $total, float $validPoints): void
     {
-        $baseDiscount = $this->calculationService->convertPointsToCurrency($validPoints);
+        $baseDiscount = $this->calculationService->convertPointsToCurrency($validPoints, (int)$quote->getStoreId());
         $discount = $this->priceCurrency->convert($baseDiscount, $quote->getStore());
 
         $addressSubtotal = (float)$total->getSubtotal();

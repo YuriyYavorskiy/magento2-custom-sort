@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Perspective\LoyaltyEngine\Model\Indexer;
 
 use Magento\Framework\App\ResourceConnection;
-use Zend_Db_Expr;
+use Magento\Framework\DB\Sql\Expression;
 
 /**
  * High-performance database handler for recalculating loyalty balance flat index.
@@ -43,7 +43,7 @@ class BalanceIndexerHandler
             $select = $connection->select()
                 ->from($transactionsTable, [
                     'customer_id',
-                    'total_active_points' => new Zend_Db_Expr('COALESCE(SUM(points), 0)')
+                    'total_active_points' => new Expression('COALESCE(SUM(points), 0)')
                 ])
                 ->where('customer_id IN (?)', $chunk)
                 ->group('customer_id');

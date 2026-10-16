@@ -27,6 +27,7 @@ class ConfigProvider implements ConfigProviderInterface
     {
         return [
             'loyaltyEngine' => [
+                'enabled' => $this->calculationService->isEnabled(),
                 'maxRedemptionPercentage' => $this->calculationService->getMaxRedemptionPercentage(),
                 'accrualPercentage' => $this->calculationService->getAccrualPercentage(),
                 'pointsRate' => $this->calculationService->convertPointsToCurrency(1.0)

@@ -13,6 +13,7 @@ use Perspective\LoyaltyEngine\Api\LoyaltyCalculationServiceInterface;
  */
 class LoyaltyCalculationService implements LoyaltyCalculationServiceInterface
 {
+    private const XML_PATH_ENABLED = 'loyalty_engine/general/enabled';
     private const XML_PATH_ACCRUAL_PERCENTAGE = 'loyalty_engine/general/accrual_percentage';
     private const XML_PATH_MAX_REDEMPTION_PERCENTAGE = 'loyalty_engine/general/max_redemption_percentage';
     private const XML_PATH_POINTS_RATE = 'loyalty_engine/general/points_rate';
@@ -28,109 +29,105 @@ class LoyaltyCalculationService implements LoyaltyCalculationServiceInterface
     /**
      * @inheritdoc
      */
-    public function calculateCashbackPoints(float $baseSubtotal): float
+    public function calculateCashbackPoints(float $baseSubtotal, ?int $storeId = null): float
     {
         if ($baseSubtotal <= 0.0) {
             return 0.0;
         }
 
-        $percentageConfig = $this->scopeConfig->getValue(
-            self::XML_PATH_ACCRUAL_PERCENTAGE,
-            ScopeInterface::SCOPE_STORE
-        );
-
-        $rate = $percentageConfig !== null && $percentageConfig !== ''
-            ? ((float)$percentageConfig) / 100.0
-            : self::DEFAULT_ACCRUAL_PERCENTAGE;
-
-        return round($baseSubtotal * $rate, 4);
+        return round($baseSubtotal * ($this->getAccrualPercentage($storeId) / 100.0), 4);
     }
 
     /**
      * @inheritdoc
      */
-    public function calculateMaxRedeemablePoints(float $baseSubtotal, float $customerBalance): float
-    {
+    public function calculateMaxRedeemablePoints(
+        float $baseSubtotal,
+        float $customerBalance,
+        ?int $storeId = null
+    ): float {
         if ($baseSubtotal <= 0.0 || $customerBalance <= 0.0) {
             return 0.0;
         }
 
-        $maxPercentageConfig = $this->scopeConfig->getValue(
-            self::XML_PATH_MAX_REDEMPTION_PERCENTAGE,
-            ScopeInterface::SCOPE_STORE
-        );
+        $maxDiscount = $baseSubtotal * ($this->getMaxRedemptionPercentage($storeId) / 100.0);
 
-        $maxPercentage = $maxPercentageConfig !== null && $maxPercentageConfig !== ''
-            ? ((float)$maxPercentageConfig) / 100.0
-            : self::DEFAULT_MAX_REDEMPTION_PERCENTAGE;
-
-        $maxDiscount = $baseSubtotal * $maxPercentage;
-        $maxPointsForDiscount = $this->convertCurrencyToPoints($maxDiscount);
-
-        return min($customerBalance, $maxPointsForDiscount);
+        return min($customerBalance, $this->convertCurrencyToPoints($maxDiscount, $storeId));
     }
 
     /**
      * @inheritdoc
      */
-    public function convertPointsToCurrency(float $points): float
+    public function convertPointsToCurrency(float $points, ?int $storeId = null): float
     {
-        $rateConfig = $this->scopeConfig->getValue(
-            self::XML_PATH_POINTS_RATE,
-            ScopeInterface::SCOPE_STORE
-        );
-
-        $rate = $rateConfig !== null && $rateConfig !== ''
-            ? (float)$rateConfig
-            : self::DEFAULT_POINTS_PER_CURRENCY_UNIT;
-
-        return round($points * $rate, 4);
+        return round($points * $this->getPointsRate($storeId), 4);
     }
 
     /**
      * @inheritdoc
      */
-    public function convertCurrencyToPoints(float $amount): float
+    public function convertCurrencyToPoints(float $amount, ?int $storeId = null): float
     {
-        $rateConfig = $this->scopeConfig->getValue(
-            self::XML_PATH_POINTS_RATE,
-            ScopeInterface::SCOPE_STORE
-        );
-
-        $rate = $rateConfig !== null && $rateConfig !== '' && (float)$rateConfig > 0.0
-            ? (float)$rateConfig
-            : self::DEFAULT_POINTS_PER_CURRENCY_UNIT;
-
-        return round($amount / $rate, 4);
+        return round($amount / $this->getPointsRate($storeId), 4);
     }
 
     /**
      * @inheritdoc
      */
-    public function getAccrualPercentage(): float
+    public function getAccrualPercentage(?int $storeId = null): float
     {
-        $percentageConfig = $this->scopeConfig->getValue(
+        return $this->getFloat(
             self::XML_PATH_ACCRUAL_PERCENTAGE,
-            ScopeInterface::SCOPE_STORE
+            self::DEFAULT_ACCRUAL_PERCENTAGE * 100.0,
+            $storeId
         );
-
-        return $percentageConfig !== null && $percentageConfig !== ''
-            ? (float)$percentageConfig
-            : self::DEFAULT_ACCRUAL_PERCENTAGE * 100.0;
     }
 
     /**
      * @inheritdoc
      */
-    public function getMaxRedemptionPercentage(): float
+    public function getMaxRedemptionPercentage(?int $storeId = null): float
     {
-        $maxPercentageConfig = $this->scopeConfig->getValue(
+        return $this->getFloat(
             self::XML_PATH_MAX_REDEMPTION_PERCENTAGE,
-            ScopeInterface::SCOPE_STORE
+            self::DEFAULT_MAX_REDEMPTION_PERCENTAGE * 100.0,
+            $storeId
         );
+    }
 
-        return $maxPercentageConfig !== null && $maxPercentageConfig !== ''
-            ? (float)$maxPercentageConfig
-            : self::DEFAULT_MAX_REDEMPTION_PERCENTAGE * 100.0;
+    /**
+     * @inheritdoc
+     */
+    public function isEnabled(?int $storeId = null): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::XML_PATH_ENABLED, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * Retrieve positive points to currency rate for the store.
+     *
+     * @param int|null $storeId
+     * @return float
+     */
+    private function getPointsRate(?int $storeId): float
+    {
+        $rate = $this->getFloat(self::XML_PATH_POINTS_RATE, self::DEFAULT_POINTS_PER_CURRENCY_UNIT, $storeId);
+
+        return $rate > 0.0 ? $rate : self::DEFAULT_POINTS_PER_CURRENCY_UNIT;
+    }
+
+    /**
+     * Read numeric store-scoped config value with default fallback.
+     *
+     * @param string $path
+     * @param float $default
+     * @param int|null $storeId
+     * @return float
+     */
+    private function getFloat(string $path, float $default, ?int $storeId): float
+    {
+        $value = $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_STORE, $storeId);
+
+        return $value !== null && $value !== '' ? (float)$value : $default;
     }
 }
