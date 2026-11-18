@@ -14,7 +14,14 @@ use Perspective\LoyaltyEngine\Model\Service\LoyaltyCalculationService;
  */
 class LoyaltyCalculationServiceTest extends TestCase
 {
+    /**
+     * @var ScopeConfigInterface|MockObject
+     */
     private ScopeConfigInterface|MockObject $scopeConfigMock;
+
+    /**
+     * @var LoyaltyCalculationService
+     */
     private LoyaltyCalculationService $service;
 
     protected function setUp(): void

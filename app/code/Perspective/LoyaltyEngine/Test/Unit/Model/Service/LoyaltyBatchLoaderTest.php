@@ -16,9 +16,24 @@ use Perspective\LoyaltyEngine\Model\Service\LoyaltyBatchLoader;
  */
 class LoyaltyBatchLoaderTest extends TestCase
 {
+    /**
+     * @var ResourceConnection|MockObject
+     */
     private ResourceConnection|MockObject $resourceMock;
+
+    /**
+     * @var AdapterInterface|MockObject
+     */
     private AdapterInterface|MockObject $connectionMock;
+
+    /**
+     * @var Select|MockObject
+     */
     private Select|MockObject $selectMock;
+
+    /**
+     * @var LoyaltyBatchLoader
+     */
     private LoyaltyBatchLoader $batchLoader;
 
     protected function setUp(): void

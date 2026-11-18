@@ -11,9 +11,10 @@ type Customer {
 }
 
 type Query {
-    loyalty_customers_balance(customer_ids: [Int!]!): [LoyaltyCustomerBalanceItem!]!
+    loyalty_customers_balance(customerIds: [Int!]!): [LoyaltyCustomerBalanceItem!]!
         @resolver(class: "Perspective\\LoyaltyEngine\\Model\\Resolver\\CustomersLoyaltyBalanceBatch")
-        @doc(description: "Batch query to fetch loyalty points for multiple customers (e.g. friends list) using Deferred SQL loading")
+        @cache(cacheIdentity: "Perspective\\LoyaltyEngine\\Model\\Resolver\\Cache\\LoyaltyBalanceIdentity")
+        @doc(description: "Batch query to fetch loyalty points for multiple customers using BatchResponse")
 }
 
 type LoyaltyCustomerBalanceItem {

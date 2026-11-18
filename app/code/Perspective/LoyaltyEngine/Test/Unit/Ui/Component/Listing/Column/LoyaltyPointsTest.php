@@ -14,19 +14,19 @@ use Perspective\LoyaltyEngine\Ui\Component\Listing\Column\LoyaltyPoints;
 class LoyaltyPointsTest extends TestCase
 {
     /**
-     * @var MockObject&ContextInterface
+     * @var ContextInterface|MockObject
      */
-    private MockObject&ContextInterface $contextMock;
+    private ContextInterface|MockObject $contextMock;
 
     /**
-     * @var MockObject&Processor
+     * @var Processor|MockObject
      */
-    private MockObject&Processor $processorMock;
+    private Processor|MockObject $processorMock;
 
     /**
-     * @var MockObject&UiComponentFactory
+     * @var UiComponentFactory|MockObject
      */
-    private MockObject&UiComponentFactory $uiComponentFactoryMock;
+    private UiComponentFactory|MockObject $uiComponentFactoryMock;
 
     /**
      * @var LoyaltyPoints

@@ -12,9 +12,9 @@ use Perspective\LoyaltyEngine\Model\Checkout\ConfigProvider;
 class ConfigProviderTest extends TestCase
 {
     /**
-     * @var MockObject&LoyaltyCalculationServiceInterface
+     * @var LoyaltyCalculationServiceInterface|MockObject
      */
-    private MockObject&LoyaltyCalculationServiceInterface $calculationServiceMock;
+    private LoyaltyCalculationServiceInterface|MockObject $calculationServiceMock;
 
     /**
      * @var ConfigProvider

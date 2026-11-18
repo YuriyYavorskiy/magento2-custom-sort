@@ -80,7 +80,7 @@ class LoyaltyPointsTest extends TestCase
         $quoteMock = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
             ->addMethods(['getCustomerId'])
-            ->onlyMethods(['getData', 'setData', 'getStore', 'getStoreId'])
+            ->onlyMethods(['getData', 'setData', 'getStore', 'getStoreId', 'getExtensionAttributes'])
             ->getMock();
 
         $quoteMock->expects($this->once())->method('getData')->with('loyalty_points_applied')->willReturn(50.0);

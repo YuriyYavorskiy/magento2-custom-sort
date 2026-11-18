@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
-    <table name="loyalty_transactions" resource="default" engine="innodb" comment="Loyalty Immutable Transactions Ledger">
+    <table name="loyalty_transactions" resource="default" engine="innodb"
+           comment="Loyalty Immutable Transactions Ledger">
         <column xsi:type="int" name="transaction_id" unsigned="true" nullable="false" identity="true"
                 comment="Transaction ID"/>
         <column xsi:type="int" name="customer_id" unsigned="true" nullable="false" identity="false"
@@ -40,7 +41,8 @@
         </index>
     </table>
 
-    <table name="loyalty_balance_index" resource="default" engine="innodb" comment="Loyalty Active Balance Flat Index Table">
+    <table name="loyalty_balance_index" resource="default" engine="innodb"
+           comment="Loyalty Active Balance Flat Index Table">
         <column xsi:type="int" name="customer_id" unsigned="true" nullable="false" identity="false"
                 comment="Customer ID"/>
         <column xsi:type="decimal" name="total_active_points" scale="4" precision="12" nullable="false" default="0.0000"
@@ -58,21 +60,21 @@
     </table>
 
     <table name="quote" resource="checkout" engine="innodb">
-        <column xsi:type="decimal" name="loyalty_points_applied" scale="4" precision="12" nullable="false" default="0.0000"
-                comment="Loyalty Points Applied"/>
-        <column xsi:type="decimal" name="loyalty_discount_amount" scale="4" precision="12" nullable="false" default="0.0000"
-                comment="Loyalty Discount Amount"/>
-        <column xsi:type="decimal" name="base_loyalty_discount_amount" scale="4" precision="12" nullable="false" default="0.0000"
-                comment="Base Loyalty Discount Amount"/>
+        <column xsi:type="decimal" name="loyalty_points_applied" scale="4" precision="12"
+                nullable="false" default="0.0000" comment="Loyalty Points Applied"/>
+        <column xsi:type="decimal" name="loyalty_discount_amount" scale="4" precision="12"
+                nullable="false" default="0.0000" comment="Loyalty Discount Amount"/>
+        <column xsi:type="decimal" name="base_loyalty_discount_amount" scale="4" precision="12"
+                nullable="false" default="0.0000" comment="Base Loyalty Discount Amount"/>
     </table>
 
     <table name="sales_order" resource="sales" engine="innodb">
-        <column xsi:type="decimal" name="loyalty_points_applied" scale="4" precision="12" nullable="false" default="0.0000"
-                comment="Loyalty Points Applied"/>
-        <column xsi:type="decimal" name="loyalty_discount_amount" scale="4" precision="12" nullable="false" default="0.0000"
-                comment="Loyalty Discount Amount"/>
-        <column xsi:type="decimal" name="base_loyalty_discount_amount" scale="4" precision="12" nullable="false" default="0.0000"
-                comment="Base Loyalty Discount Amount"/>
+        <column xsi:type="decimal" name="loyalty_points_applied" scale="4" precision="12"
+                nullable="false" default="0.0000" comment="Loyalty Points Applied"/>
+        <column xsi:type="decimal" name="loyalty_discount_amount" scale="4" precision="12"
+                nullable="false" default="0.0000" comment="Loyalty Discount Amount"/>
+        <column xsi:type="decimal" name="base_loyalty_discount_amount" scale="4" precision="12"
+                nullable="false" default="0.0000" comment="Base Loyalty Discount Amount"/>
     </table>
 
     <table name="sales_invoice" resource="sales" engine="innodb">

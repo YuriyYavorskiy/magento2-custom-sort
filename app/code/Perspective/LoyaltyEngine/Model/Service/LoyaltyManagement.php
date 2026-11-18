@@ -124,7 +124,15 @@ class LoyaltyManagement implements LoyaltyManagementInterface
     {
         $orderId = (int)$order->getEntityId();
         $customerId = (int)$order->getCustomerId();
-        $points = (float)$order->getData('loyalty_points_applied');
+        $extensionAttributes = $order->getExtensionAttributes();
+        $points = 0.0;
+
+        if ($extensionAttributes !== null && method_exists($extensionAttributes, 'getLoyaltyPointsApplied')) {
+            $points = (float)$extensionAttributes->getLoyaltyPointsApplied();
+        }
+        if ($points <= 0.0) {
+            $points = (float)$order->getData('loyalty_points_applied');
+        }
 
         if ($orderId <= 0 || $customerId <= 0 || $points <= 0.0) {
             return;

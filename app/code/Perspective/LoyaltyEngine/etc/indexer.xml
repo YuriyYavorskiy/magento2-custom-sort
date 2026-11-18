@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Indexer/etc/indexer.xsd">
-    <indexer id="loyalty_balance" view_id="loyalty_balance" class="Perspective\LoyaltyEngine\Model\Indexer\BalanceIndexer">
+    <indexer id="loyalty_balance"
+             view_id="loyalty_balance"
+             class="Perspective\LoyaltyEngine\Model\Indexer\BalanceIndexer">
         <title translate="true">Loyalty Customer Balance</title>
         <description translate="true">Reindex customer active loyalty points balance into flat table</description>
     </indexer>

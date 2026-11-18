@@ -19,6 +19,7 @@ define([
         },
         loyaltyBalance: ko.observable(0.0),
         maxRedeemablePoints: ko.observable(0.0),
+        maskedCartId: ko.observable(''),
         pointsToApply: ko.observable(''),
         isApplied: ko.observable(false),
         appliedPoints: ko.observable(0.0),
@@ -132,7 +133,7 @@ define([
         fetchCustomerLoyaltyBalance: function () {
             var self = this,
                 graphQlQuery = {
-                    query: 'query { customer { loyalty_points { balance } } }'
+                    query: 'query { customer { loyalty_points { balance } } customerCart { id } }'
                 };
 
             $.ajax({
@@ -144,10 +145,15 @@ define([
                     withCredentials: true
                 },
                 success: function (response) {
-                    if (response && response.data && response.data.customer && response.data.customer.loyalty_points) {
-                        var balance = parseFloat(response.data.customer.loyalty_points.balance || 0.0);
-                        self.loyaltyBalance(balance);
-                        self.recalculateMaxRedeemable();
+                    if (response && response.data) {
+                        if (response.data.customerCart && response.data.customerCart.id) {
+                            self.maskedCartId(response.data.customerCart.id);
+                        }
+                        if (response.data.customer && response.data.customer.loyalty_points) {
+                            var balance = parseFloat(response.data.customer.loyalty_points.balance || 0.0);
+                            self.loyaltyBalance(balance);
+                            self.recalculateMaxRedeemable();
+                        }
                     }
                 }
             });
@@ -158,7 +164,7 @@ define([
          */
         applyPoints: function () {
             var self = this,
-                cartId = quote.getQuoteId(),
+                cartId = this.maskedCartId() || quote.getQuoteId(),
                 points = parseFloat(this.pointsToApply());
 
             this.message('');
@@ -244,7 +250,7 @@ define([
          */
         cancelPoints: function () {
             var self = this,
-                cartId = quote.getQuoteId();
+                cartId = this.maskedCartId() || quote.getQuoteId();
 
             this.isLoading(true);
             this.message('');

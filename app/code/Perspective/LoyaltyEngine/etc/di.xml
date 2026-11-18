@@ -20,7 +20,9 @@
 
     <type name="Perspective\LoyaltyEngine\Model\TransactionRepository">
         <arguments>
-            <argument name="collectionProcessor" xsi:type="object">Magento\Framework\Api\SearchCriteria\CollectionProcessor</argument>
+            <argument name="collectionProcessor" xsi:type="object">
+                Magento\Framework\Api\SearchCriteria\CollectionProcessor
+            </argument>
         </arguments>
     </type>
 </config>

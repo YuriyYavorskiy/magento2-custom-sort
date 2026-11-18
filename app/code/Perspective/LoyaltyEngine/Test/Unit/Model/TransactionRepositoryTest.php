@@ -25,9 +25,24 @@ use Perspective\LoyaltyEngine\Model\TransactionRepository;
  */
 class TransactionRepositoryTest extends TestCase
 {
+    /**
+     * @var TransactionResource|MockObject
+     */
     private TransactionResource|MockObject $resourceMock;
+
+    /**
+     * @var BalanceResource|MockObject
+     */
     private BalanceResource|MockObject $balanceResourceMock;
+
+    /**
+     * @var AdapterInterface|MockObject
+     */
     private AdapterInterface|MockObject $connectionMock;
+
+    /**
+     * @var TransactionRepository
+     */
     private TransactionRepository $repository;
 
     protected function setUp(): void

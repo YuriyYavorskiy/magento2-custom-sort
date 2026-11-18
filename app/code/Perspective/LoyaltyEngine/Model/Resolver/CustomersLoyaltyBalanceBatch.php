@@ -24,12 +24,13 @@ class CustomersLoyaltyBalanceBatch implements ResolverInterface
         ?array $value = null,
         ?array $args = null
     ): array {
-        if (empty($args['customer_ids']) || !is_array($args['customer_ids'])) {
-            throw new GraphQlInputException(__('Required parameter "customer_ids" must be a non-empty array of IDs.'));
+        $customerIds = $args['customerIds'] ?? $args['customer_ids'] ?? null;
+        if (empty($customerIds) || !is_array($customerIds)) {
+            throw new GraphQlInputException(__('Required parameter "customerIds" must be a non-empty array of IDs.'));
         }
 
         $items = [];
-        foreach ($args['customer_ids'] as $customerId) {
+        foreach ($customerIds as $customerId) {
             $items[] = [
                 'customer_id' => (int)$customerId
             ];

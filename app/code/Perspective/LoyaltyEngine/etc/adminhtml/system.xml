@@ -5,18 +5,22 @@
         <tab id="perspective" translate="label" sortOrder="999">
             <label>Perspective</label>
         </tab>
-        <section id="loyalty_engine" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+        <section id="loyalty_engine" translate="label" type="text" sortOrder="100"
+                 showInDefault="1" showInWebsite="1" showInStore="1">
             <class>separator-top</class>
             <label>Loyalty Engine</label>
             <tab>perspective</tab>
             <resource>Perspective_LoyaltyEngine::config</resource>
-            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="general" translate="label" type="text" sortOrder="10"
+                   showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General Settings</label>
-                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="enabled" translate="label" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Loyalty Engine</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="accrual_percentage" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="accrual_percentage" translate="label" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Cashback Accrual Percentage (%)</label>
                     <comment>Percentage of base subtotal to reward as cashback points (default: 5).</comment>
                     <validate>validate-number validate-greater-than-zero</validate>
@@ -24,7 +28,8 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="max_redemption_percentage" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="max_redemption_percentage" translate="label" type="text" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Maximum Order Redemption Percentage (%)</label>
                     <comment>Maximum percentage of cart value that can be covered by points (default: 50).</comment>
                     <validate>validate-number validate-greater-than-zero</validate>
@@ -32,7 +37,8 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="points_rate" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="points_rate" translate="label" type="text" sortOrder="40"
+                       showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Points to Currency Rate</label>
                     <comment>Amount in base currency that 1 loyalty point is worth (default: 1.0).</comment>
                     <validate>validate-number validate-greater-than-zero</validate>

@@ -24,12 +24,39 @@ use Psr\Log\LoggerInterface;
  */
 class OrderAccrualConsumerTest extends TestCase
 {
+    /**
+     * @var OrderRepositoryInterface|MockObject
+     */
     private OrderRepositoryInterface|MockObject $orderRepositoryMock;
+
+    /**
+     * @var TransactionRepositoryInterface|MockObject
+     */
     private TransactionRepositoryInterface|MockObject $transactionRepositoryMock;
+
+    /**
+     * @var TransactionFactory|MockObject
+     */
     private TransactionFactory|MockObject $transactionFactoryMock;
+
+    /**
+     * @var TransactionCollectionFactory|MockObject
+     */
     private TransactionCollectionFactory|MockObject $transactionCollectionFactoryMock;
+
+    /**
+     * @var LoyaltyCalculationServiceInterface|MockObject
+     */
     private LoyaltyCalculationServiceInterface|MockObject $calculationServiceMock;
+
+    /**
+     * @var LoggerInterface|MockObject
+     */
     private LoggerInterface|MockObject $loggerMock;
+
+    /**
+     * @var OrderAccrualConsumer
+     */
     private OrderAccrualConsumer $consumer;
 
     protected function setUp(): void

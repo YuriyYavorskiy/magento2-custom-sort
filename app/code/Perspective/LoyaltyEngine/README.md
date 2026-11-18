@@ -8,24 +8,24 @@
 ## Architectural Highlights
 
 ### 1. Data Layer & Asynchronous Queue (The Background)
-- **Immutable Ledger (`loyalty_transactions`)**: Append-only ledger recording all points movements (`accrual`, `redemption`, `adjustment`). Entries cannot be updated or deleted.
+- **Immutable Ledger (`loyalty_transactions`)**: Append-only ledger recording all points movements (`accrual`, `redemption`, `refund`, `adjustment`) with a unique `reference_key` constraint. Entries cannot be updated or deleted.
 - **RabbitMQ Queue (`loyalty.points.accrual`)**: Order completion does not compute or write points in the synchronous HTTP process. An observer on `sales_order_save_after` publishes lightweight messages `{"order_id": 123, "customer_id": 456}` to RabbitMQ.
-- **Idempotent Consumer (`Perspective\LoyaltyEngine\Model\Queue\OrderAccrualConsumer`)**: Processes messages from `loyalty.points.accrual.queue`, calculates 5% cashback on the order's `base_subtotal`, and appends an immutable transaction record. Built-in idempotency checks prevent duplicate processing.
+- **Idempotent Consumer (`Perspective\LoyaltyEngine\Model\Queue\OrderAccrualConsumer`)**: Processes messages from `loyalty.points.accrual.queue`, calculates store-configured cashback on the adjusted order subtotal, and appends an immutable transaction record.
 
 ### 2. High Performance & Real-time Balance (The Speed)
 - **Flat Table (`loyalty_balance_index`)**: Contains only `customer_id`, `total_active_points`, and `updated_at`. Balance retrieval is an $O(1)$ single primary key lookup.
-- **Mview & Custom Indexer (`loyalty_balance`)**: Subscribes to changes on `loyalty_transactions.customer_id` via MySQL triggers (`loyalty_balance_cl`). When new transactions occur, only affected customer IDs are recalculated and upserted in batch.
+- **Mview & Custom Indexer (`loyalty_balance`)**: Subscribes to changes on `loyalty_transactions.customer_id` via MySQL triggers (`loyalty_balance_cl`). In runtime, balance updates are applied atomically via `SELECT ... FOR UPDATE` and `applyDelta()`, while Mview ensures eventual consistency.
 
 ### 3. Headless GraphQL API & Batch Loading (The Connectivity)
 - **Customer Query**: Extends `Customer` with `loyalty_points` (balance & currency) and `loyalty_transactions` (paginated history).
-- **Deferred Batch Loading (N+1 Prevention)**: Implements `GraphQL\Deferred` (`ValueFactory`) and an in-memory buffer (`LoyaltyBatchLoader`). When querying lists of users (e.g. friends, referrals), all customer balances are loaded in exactly **one single SQL query**.
+- **Batch & Deferred Loading (N+1 Prevention)**: Implements both `BatchResolverInterface` (`BatchResponse`) and `GraphQL\Deferred` (`ValueFactory`) backed by `LoyaltyBatchLoader`, plus `@cache` identity tagging (`LoyaltyBalanceIdentity`). When querying lists of users (e.g. friends, referrals), all customer balances are loaded in **one single SQL query**.
 - **Cart Mutations**:
   - `applyLoyaltyPointsToCart(input: ApplyLoyaltyPointsInput!)`: Validates customer ownership, active balance, and max 50% cart limit.
   - `removeLoyaltyPointsFromCart(input: RemoveLoyaltyPointsInput!)`: Clears applied points and recalculates cart totals.
 
-### 4. Checkout Totals Model (The Money)
-- **Quote Address Total Model (`loyalty_points`)**: Runs in the quote totals collection lifecycle (`sort_order="450"`), deducts points discount from `grand_total` and `base_grand_total`.
-- **Order Placement**: Automatically transfers loyalty attributes to `sales_order` via `etc/fieldset.xml` and logs an immutable `redemption` transaction via `sales_order_place_after` observer.
+### 4. Checkout, Invoice & Creditmemo Totals (The Money)
+- **Quote, Invoice & Creditmemo Total Models (`loyalty_points`)**: Run in the totals collection lifecycle (`sort_order="450"`), deducting points discount from `grand_total` and `base_grand_total` across quotes, invoices, and credit memos.
+- **Order Placement, Cancel & Refund**: Transfers loyalty attributes and Extension Attributes to `sales_order` via `etc/fieldset.xml` and `QuoteToOrderLoyaltyTransfer`, logs an atomic `redemption` transaction in `sales_order_save_after`, and handles point returns/reversals on order cancel and credit memo creation.
 
 ---
 
@@ -37,9 +37,10 @@
 | `transaction_id` | INT UNSIGNED | PK, Auto Increment | Unique transaction identifier |
 | `customer_id` | INT UNSIGNED | Foreign Key (CASCADE) | Customer entity ID |
 | `order_id` | INT UNSIGNED | Nullable, Indexed | Related order ID |
-| `points` | DECIMAL(12,4) | Signed (+/-) | Points delta (+ for accrual, - for spend) |
-| `type` | VARCHAR(32) | Not Null | `accrual`, `redemption`, `adjustment` |
+| `points` | DECIMAL(12,4) | Signed (+/-) | Points delta (+ for accrual/refund, - for spend) |
+| `type` | VARCHAR(32) | Not Null | `accrual`, `redemption`, `refund`, `adjustment` |
 | `comment` | VARCHAR(255) | Nullable | Transaction description / order increment ID |
+| `reference_key` | VARCHAR(64) | Nullable, UNIQUE | Idempotency key (e.g. `accrual:101`, `redemption:101`) |
 | `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Created timestamp (Immutable, no updated_at) |
 
 ### `loyalty_balance_index`
@@ -76,10 +77,10 @@ query {
 }
 ```
 
-### 2. Batch Query (e.g., Friends List with Deferred Loading)
+### 2. Batch Query (e.g., Friends List with BatchResponse Loading)
 ```graphql
 query {
-  loyalty_customers_balance(customer_ids: [1, 2, 3, 4, 5]) {
+  loyalty_customers_balance(customerIds: [1, 2, 3, 4, 5]) {
     customer_id
     loyalty_points {
       balance

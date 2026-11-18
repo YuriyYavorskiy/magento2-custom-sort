@@ -1,0 +1,60 @@
+{
+    "loyalty_transactions": {
+        "column": {
+            "transaction_id": true,
+            "customer_id": true,
+            "order_id": true,
+            "points": true,
+            "type": true,
+            "comment": true,
+            "reference_key": true,
+            "created_at": true
+        },
+        "index": {
+            "LOYALTY_TRANSACTIONS_CUSTOMER_ID_CREATED_AT": true,
+            "LOYALTY_TRANSACTIONS_ORDER_ID_TYPE": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "LOYALTY_TRANSACTIONS_REFERENCE_KEY": true,
+            "LOYALTY_TRANSACTIONS_CUSTOMER_ID_CUSTOMER_ENTITY_ENTITY_ID": true
+        }
+    },
+    "loyalty_balance_index": {
+        "column": {
+            "customer_id": true,
+            "total_active_points": true,
+            "updated_at": true
+        },
+        "constraint": {
+            "PRIMARY": true,
+            "LOYALTY_BALANCE_INDEX_CUSTOMER_ID_CUSTOMER_ENTITY_ENTITY_ID": true
+        }
+    },
+    "quote": {
+        "column": {
+            "loyalty_points_applied": true,
+            "loyalty_discount_amount": true,
+            "base_loyalty_discount_amount": true
+        }
+    },
+    "sales_order": {
+        "column": {
+            "loyalty_points_applied": true,
+            "loyalty_discount_amount": true,
+            "base_loyalty_discount_amount": true
+        }
+    },
+    "sales_invoice": {
+        "column": {
+            "loyalty_discount_amount": true,
+            "base_loyalty_discount_amount": true
+        }
+    },
+    "sales_creditmemo": {
+        "column": {
+            "loyalty_discount_amount": true,
+            "base_loyalty_discount_amount": true
+        }
+    }
+}

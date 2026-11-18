@@ -140,6 +140,7 @@ class LoyaltyPoints extends AbstractTotal
         $quote->setData('loyalty_points_applied', $validPoints);
         $quote->setData('loyalty_discount_amount', $discount);
         $quote->setData('base_loyalty_discount_amount', $baseDiscount);
+        $this->syncQuoteExtensionAttributes($quote, $validPoints, $discount, $baseDiscount);
     }
 
     /**
@@ -157,6 +158,38 @@ class LoyaltyPoints extends AbstractTotal
         $quote->setData('loyalty_points_applied', 0.0);
         $quote->setData('loyalty_discount_amount', 0.0);
         $quote->setData('base_loyalty_discount_amount', 0.0);
+        $this->syncQuoteExtensionAttributes($quote, 0.0, 0.0, 0.0);
+    }
+
+    /**
+     * Synchronize loyalty values with cart extension attributes when present.
+     *
+     * @param Quote $quote
+     * @param float $points
+     * @param float $discount
+     * @param float $baseDiscount
+     * @return void
+     */
+    private function syncQuoteExtensionAttributes(
+        Quote $quote,
+        float $points,
+        float $discount,
+        float $baseDiscount
+    ): void {
+        $extensionAttributes = $quote->getExtensionAttributes();
+        if ($extensionAttributes === null) {
+            return;
+        }
+
+        if (method_exists($extensionAttributes, 'setLoyaltyPointsApplied')) {
+            $extensionAttributes->setLoyaltyPointsApplied($points);
+        }
+        if (method_exists($extensionAttributes, 'setLoyaltyDiscountAmount')) {
+            $extensionAttributes->setLoyaltyDiscountAmount($discount);
+        }
+        if (method_exists($extensionAttributes, 'setBaseLoyaltyDiscountAmount')) {
+            $extensionAttributes->setBaseLoyaltyDiscountAmount($baseDiscount);
+        }
     }
 
     /**

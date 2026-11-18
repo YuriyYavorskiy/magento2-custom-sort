@@ -17,9 +17,24 @@ use Perspective\LoyaltyEngine\Model\TransactionFactory;
  */
 class BalanceIndexerIntegrationTest extends TestCase
 {
+    /**
+     * @var TransactionRepositoryInterface
+     */
     private TransactionRepositoryInterface $transactionRepository;
+
+    /**
+     * @var BalanceRepositoryInterface
+     */
     private BalanceRepositoryInterface $balanceRepository;
+
+    /**
+     * @var TransactionFactory
+     */
     private TransactionFactory $transactionFactory;
+
+    /**
+     * @var BalanceIndexer
+     */
     private BalanceIndexer $indexer;
 
     protected function setUp(): void

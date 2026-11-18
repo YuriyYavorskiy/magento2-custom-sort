@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+    <route url="/V1/loyalty/balances/:customerId" method="GET">
+        <service class="Perspective\LoyaltyEngine\Api\BalanceRepositoryInterface" method="getByCustomerId"/>
+        <resources>
+            <resource ref="Perspective_LoyaltyEngine::customer_loyalty"/>
+        </resources>
+    </route>
+    <route url="/V1/loyalty/me/balance" method="GET">
+        <service class="Perspective\LoyaltyEngine\Api\BalanceRepositoryInterface" method="getByCustomerId"/>
+        <resources>
+            <resource ref="self"/>
+        </resources>
+        <data>
+            <parameter name="customerId" force="true">%customer_id%</parameter>
+        </data>
+    </route>
+    <route url="/V1/loyalty/transactions" method="POST">
+        <service class="Perspective\LoyaltyEngine\Api\TransactionRepositoryInterface" method="save"/>
+        <resources>
+            <resource ref="Perspective_LoyaltyEngine::customer_loyalty"/>
+        </resources>
+    </route>
+    <route url="/V1/loyalty/transactions/:transactionId" method="GET">
+        <service class="Perspective\LoyaltyEngine\Api\TransactionRepositoryInterface" method="getById"/>
+        <resources>
+            <resource ref="Perspective_LoyaltyEngine::customer_loyalty"/>
+        </resources>
+    </route>
+    <route url="/V1/loyalty/transactions" method="GET">
+        <service class="Perspective\LoyaltyEngine\Api\TransactionRepositoryInterface" method="getList"/>
+        <resources>
+            <resource ref="Perspective_LoyaltyEngine::customer_loyalty"/>
+        </resources>
+    </route>
+    <route url="/V1/carts/mine/loyalty-points" method="PUT">
+        <service class="Perspective\LoyaltyEngine\Api\LoyaltyManagementInterface" method="applyPoints"/>
+        <resources>
+            <resource ref="self"/>
+        </resources>
+        <data>
+            <parameter name="cartId" force="true">%cart_id%</parameter>
+        </data>
+    </route>
+    <route url="/V1/carts/mine/loyalty-points" method="DELETE">
+        <service class="Perspective\LoyaltyEngine\Api\LoyaltyManagementInterface" method="removePoints"/>
+        <resources>
+            <resource ref="self"/>
+        </resources>
+        <data>
+            <parameter name="cartId" force="true">%cart_id%</parameter>
+        </data>
+    </route>
+</routes>
